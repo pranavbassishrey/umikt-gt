@@ -14,8 +14,8 @@
     "lr": 0.001,
     "weight_decay": 0.0001,
     "batch_size": 32,
-    "n_epochs": 5,
-    "patience": 3,
+    "n_epochs": 50,
+    "patience": 10,
     "lambda_mastery": 1.0,
     "lambda_misconception": 0.5,
     "lambda_retention": 0.3,
@@ -26,11 +26,11 @@
     "seed": 42
   },
   "n_params": 57573,
-  "best_epoch": 5,
-  "training_time_sec": 24.91,
+  "best_epoch": 40,
+  "training_time_sec": 246.55,
   "test_metrics": {
     "mastery_accuracy": 1.0,
-    "mastery_rmse": 0.041662807452924486,
+    "mastery_rmse": 0.04035885954907519,
     "mastery_auc": NaN
   },
   "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."

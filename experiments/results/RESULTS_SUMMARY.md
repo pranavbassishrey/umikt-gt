@@ -16,11 +16,11 @@ directly to a row in `experiments/results/ablation_results.csv`.
 
 | Model | Accuracy | AUC | RMSE |
 |---|---|---|---|
-| Mastery-Only Baseline | 1.0000 | N/A | 0.0413 |
-| +Temporal (GRU) | 1.0000 | N/A | 0.0404 |
-| Full UMiKT-GAT | 1.0000 | N/A | 0.0452 |
+| Mastery-Only Baseline | 1.0000 | N/A | 0.0402 |
+| +Temporal (GRU) | 1.0000 | N/A | 0.0398 |
+| Full UMiKT-GAT | 1.0000 | N/A | 0.0436 |
 | BKT Baseline | 0.0180 | 0.9696 | 0.8799 |
-| DKT Baseline | 0.9987 | 0.9783 | 0.0868 |
+| DKT Baseline | 0.9987 | 0.9753 | 0.0920 |
 
 **Hedged finding:** On the synthetic dataset, we observe [improvement / no improvement /
 inconclusive comparison] across ablation variants. Because the data is synthetic and the
@@ -44,7 +44,7 @@ text responses, which has not been evaluated at scale in this codebase.
 
 | Variant | ECE | Brier Score |
 |---|---|---|
-| Full UMiKT-GAT | 0.0207 | 0.0020 |
+| Full UMiKT-GAT | 0.0200 | 0.0019 |
 
 **Hedged finding:** ECE and Brier score are computed on synthetic data. MC-Dropout variance
 provides a reasonable proxy for epistemic uncertainty (data sparsity per concept) but is

@@ -1,0 +1,112 @@
+{
+  "_meta": {
+    "description": "Prerequisite concept graph for Programming Fundamentals / Data Structures learning domain.",
+    "domain": "Programming Fundamentals and Data Structures",
+    "version": "1.0",
+    "dependency_weight_note": "All edge dependency_weights are domain-expert priors, not learned parameters. Values in [0,1] represent the estimated strength of prerequisite dependency. A weight of 0.9 means the target concept is highly dependent on the source. These are used as edge features in the GAT layer and are not presented as experimental findings.",
+    "node_count": 7,
+    "edge_count": 9
+  },
+  "nodes": [
+    {
+      "concept_id": 0,
+      "name": "Variables",
+      "description": "Understanding of data types, variable declaration, assignment, and memory."
+    },
+    {
+      "concept_id": 1,
+      "name": "Conditions",
+      "description": "Conditional branching: if/else, boolean logic, comparison operators."
+    },
+    {
+      "concept_id": 2,
+      "name": "Loops",
+      "description": "Iteration constructs: for loops, while loops, loop termination, nested loops."
+    },
+    {
+      "concept_id": 3,
+      "name": "Functions",
+      "description": "Function definition, parameters, return values, scope, and modularity."
+    },
+    {
+      "concept_id": 4,
+      "name": "Recursion",
+      "description": "Recursive function calls, base cases, stack frames, and recursive decomposition."
+    },
+    {
+      "concept_id": 5,
+      "name": "Data Structures",
+      "description": "Arrays, lists, stacks, queues, dictionaries, and their operations."
+    },
+    {
+      "concept_id": 6,
+      "name": "Algorithms",
+      "description": "Sorting, searching, complexity analysis (Big-O), and algorithm design patterns."
+    }
+  ],
+  "edges": [
+    {
+      "source": 0,
+      "target": 1,
+      "dependency_weight": 0.85,
+      "prerequisite_type": "foundational",
+      "justification": "Conditions require understanding of variables and their values."
+    },
+    {
+      "source": 0,
+      "target": 2,
+      "dependency_weight": 0.80,
+      "prerequisite_type": "foundational",
+      "justification": "Loops use loop variables and counters."
+    },
+    {
+      "source": 1,
+      "target": 2,
+      "dependency_weight": 0.75,
+      "prerequisite_type": "foundational",
+      "justification": "Loop termination conditions require understanding of boolean logic."
+    },
+    {
+      "source": 2,
+      "target": 3,
+      "dependency_weight": 0.70,
+      "prerequisite_type": "supportive",
+      "justification": "Functions often encapsulate iteration logic; loops appear inside functions."
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "dependency_weight": 0.95,
+      "prerequisite_type": "foundational",
+      "justification": "Recursion is a special case of function calls; functions must be understood first."
+    },
+    {
+      "source": 1,
+      "target": 4,
+      "dependency_weight": 0.60,
+      "prerequisite_type": "supportive",
+      "justification": "Base-case reasoning in recursion relies on conditional logic."
+    },
+    {
+      "source": 3,
+      "target": 5,
+      "dependency_weight": 0.65,
+      "prerequisite_type": "supportive",
+      "justification": "Data structure operations are typically encapsulated in functions."
+    },
+    {
+      "source": 2,
+      "target": 5,
+      "dependency_weight": 0.70,
+      "prerequisite_type": "supportive",
+      "justification": "Traversal of data structures requires iteration."
+    },
+    {
+      "source": 5,
+      "target": 6,
+      "dependency_weight": 0.90,
+      "prerequisite_type": "foundational",
+      "justification": "Algorithms operate on data structures; sorting/searching requires data structure understanding."
+    }
+  ]
+}

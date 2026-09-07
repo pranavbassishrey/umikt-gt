@@ -1,0 +1,17 @@
+{
+  "variant": "full_umikt_gat",
+  "metrics": {
+    "mastery_accuracy": 1.0,
+    "mastery_rmse": 0.045208068291526265,
+    "mastery_auc": NaN,
+    "ece": 0.020672261114897474,
+    "brier_score": 0.001968561832011877,
+    "mean_predictive_variance": 0.0006771786656124082,
+    "mc_f1_macro": 0.1935103244837758,
+    "mc_accuracy": 0.9371428571428572,
+    "retention_rmse": 0.03879927284130424,
+    "retention_mae": 0.012846961358029927
+  },
+  "mc_samples": 20,
+  "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."
+}

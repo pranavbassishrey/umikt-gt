@@ -1,0 +1,37 @@
+{
+  "variant": "+temporal",
+  "config": {
+    "hidden_dim": 64,
+    "gru_layers": 2,
+    "n_heads": 4,
+    "fusion_order": "temporal_first",
+    "use_graph": false,
+    "use_misconception_head": false,
+    "use_retention": false,
+    "dynamic_gat": true,
+    "dropout_rate": 0.3,
+    "gat_dropout": 0.2,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 32,
+    "n_epochs": 50,
+    "patience": 10,
+    "lambda_mastery": 1.0,
+    "lambda_misconception": 0.5,
+    "lambda_retention": 0.3,
+    "mc_samples": 20,
+    "llm_provider": "mock",
+    "seq_len": 10,
+    "n_concepts": 7,
+    "seed": 42
+  },
+  "n_params": 43713,
+  "best_epoch": 10,
+  "training_time_sec": 30.18,
+  "test_metrics": {
+    "mastery_accuracy": 1.0,
+    "mastery_rmse": 0.03977958159517582,
+    "mastery_auc": NaN
+  },
+  "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."
+}

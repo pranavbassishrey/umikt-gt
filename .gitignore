@@ -1,0 +1,67 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+
+# ── PyTorch model checkpoints (can be large) ─────────────────────────────────
+# Commit only final/best checkpoints intentionally
+experiments/results/*/best_model.pt
+experiments/results/*/checkpoint_*.pt
+
+# ── Generated data (reproducible — run scripts to regenerate) ─────────────────
+data/layer2_synthetic/synthetic_train.csv
+data/layer2_synthetic/synthetic_val.csv
+data/layer2_synthetic/synthetic_test.csv
+data/layer2_synthetic/synthetic_metadata.json
+data/layer1_public_kt/assistments09_processed.csv
+data/layer1_public_kt/layer1_metadata.json
+
+# ── Experiment logs (large, not needed in repo) ───────────────────────────────
+experiments/results/*/train_log.json
+experiments/results/agent_logs/
+
+# ── Keep: CSVs, charts, summary docs, eval metrics ───────────────────────────
+!experiments/results/ablation_results.csv
+!experiments/results/baseline_comparison.csv
+!experiments/results/ablation_bar_chart.png
+!experiments/results/baseline_comparison_chart.png
+!experiments/results/RESULTS_SUMMARY.md
+!experiments/results/system_cost.json
+!experiments/results/demo_session_log.json
+!experiments/results/*/reliability_diagram.png
+!experiments/results/*/eval_metrics.json
+!experiments/results/*/train_metrics.json
+
+# ── Jupyter / IDE ─────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── pytest / coverage ─────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Environment / secrets ─────────────────────────────────────────────────────
+.env
+*.key

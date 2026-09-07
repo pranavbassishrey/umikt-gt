@@ -1,0 +1,5 @@
+# SYNTHETIC DATA — Baseline Comparison
+model,brier_score,data_note,ece,mastery_accuracy,mastery_auc,mastery_rmse,mc_accuracy,mc_f1_macro,mean_predictive_variance,retention_mae,retention_rmse,training_time_sec,variant,variant_display
+BKT,,synthetic,,0.018,0.969626168224299,0.8799306895571022,,,,,,0.11,,
+DKT,,synthetic,,0.9986666666666667,0.9783044058744994,0.08675084559315188,,,,,,2.41,,
+Full UMiKT-GAT,0.001968561832011877,synthetic,0.020672261114897474,1.0,nan,0.045208068291526265,0.9371428571428572,0.1935103244837758,0.0006771786656124082,0.012846961358029927,0.03879927284130424,21.83,full_umikt_gat,Full UMiKT-GAT

@@ -1,0 +1,45 @@
+{
+  "session_total_latency_sec": 0.488,
+  "n_interactions": 5,
+  "agents": [
+    {
+      "agent": "DiagnosisAgent",
+      "call_count": 1,
+      "total_latency_sec": 0.0,
+      "avg_latency_sec": 0.0
+    },
+    {
+      "agent": "AssessmentAgent",
+      "call_count": 5,
+      "total_latency_sec": 0.0001,
+      "avg_latency_sec": 0.0
+    },
+    {
+      "agent": "EvaluationAgent",
+      "call_count": 5,
+      "total_latency_sec": 0.0022,
+      "avg_latency_sec": 0.0004
+    },
+    {
+      "agent": "LearnerModelingAgent",
+      "call_count": 5,
+      "total_latency_sec": 0.4844,
+      "avg_latency_sec": 0.0969
+    },
+    {
+      "agent": "CurriculumPlanningAgent",
+      "call_count": 10,
+      "total_latency_sec": 0.0002,
+      "avg_latency_sec": 0.0
+    },
+    {
+      "agent": "CurriculumAdaptationAgent",
+      "call_count": 10,
+      "total_latency_sec": 0.0001,
+      "avg_latency_sec": 0.0
+    }
+  ],
+  "llm_calls": 5,
+  "llm_tokens": 0,
+  "llm_provider": "MockLLMProvider (offline, no API calls)"
+}

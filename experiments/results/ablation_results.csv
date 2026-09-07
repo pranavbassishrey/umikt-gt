@@ -1,0 +1,8 @@
+# SYNTHETIC DATA — UMiKT-GAT Ablation Results
+variant,variant_display,brier_score,data_note,ece,mastery_accuracy,mastery_auc,mastery_rmse,mc_accuracy,mc_f1_macro,mean_predictive_variance,retention_mae,retention_rmse,training_time_sec
+mastery_only,Mastery-Only Baseline,,synthetic,,1.0,nan,0.041271547184319086,,,,,,9.56
++temporal,+Temporal (GRU),,synthetic,,1.0,nan,0.04042696799131673,,,,,,8.25
++graph,+Graph (GAT),,synthetic,,1.0,nan,0.041662807452924486,,,,,,25.29
++misconception,+Misconception Head,,synthetic,,1.0,nan,0.04165213846902839,0.9371428571428572,0.1935103244837758,,,,20.9
++uncertainty,+Uncertainty (MC-Dropout),,synthetic,,1.0,nan,0.04149595084568243,0.9371428571428572,0.1935103244837758,,0.012846961358029927,0.03879927284130424,21.53
+full_umikt_gat,Full UMiKT-GAT,0.001968561832011877,synthetic,0.020672261114897474,1.0,nan,0.045208068291526265,0.9371428571428572,0.1935103244837758,0.0006771786656124082,0.012846961358029927,0.03879927284130424,21.83

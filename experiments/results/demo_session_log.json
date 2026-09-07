@@ -1,0 +1,173 @@
+{
+  "learner_id": "demo_learner_001",
+  "steps": [
+    {
+      "step": 1,
+      "concept_id": 1,
+      "concept_name": "Conditions",
+      "student_answer": "Should be x == 5",
+      "correctness": 0.9,
+      "misconception_label": "none",
+      "misconception_severity": 0.0,
+      "mastery_after": 0.0024421135894954205,
+      "uncertainty_after": 3.086609240199323e-05,
+      "action": "diagnose_prerequisite",
+      "explanation": "Loops shows low mastery (M=0.00) and weak prerequisites (candidate gaps in: Variables, Conditions). Diagnosing prerequisite knowledge before attempting Loops content."
+    },
+    {
+      "step": 2,
+      "concept_id": 2,
+      "concept_name": "Loops",
+      "student_answer": "1 to 5",
+      "correctness": 0.289,
+      "misconception_label": "loop_termination_misunderstanding",
+      "misconception_severity": 0.4,
+      "mastery_after": 0.006024764850735664,
+      "uncertainty_after": 0.00015173921383393463,
+      "action": "diagnose_prerequisite",
+      "explanation": "Loops shows low mastery (M=0.01) and weak prerequisites (candidate gaps in: Variables, Conditions). Diagnosing prerequisite knowledge before attempting Loops content."
+    },
+    {
+      "step": 3,
+      "concept_id": 2,
+      "concept_name": "Loops",
+      "student_answer": "4 times",
+      "correctness": 0.44,
+      "misconception_label": "none",
+      "misconception_severity": 0.0,
+      "mastery_after": 0.0063730389811098576,
+      "uncertainty_after": 0.0007458834443241358,
+      "action": "diagnose_prerequisite",
+      "explanation": "Loops shows low mastery (M=0.01) and weak prerequisites (candidate gaps in: Variables, Conditions). Diagnosing prerequisite knowledge before attempting Loops content."
+    },
+    {
+      "step": 4,
+      "concept_id": 2,
+      "concept_name": "Loops",
+      "student_answer": "Missing i += 1 \u2014 infinite loop",
+      "correctness": 0.9,
+      "misconception_label": "none",
+      "misconception_severity": 0.0,
+      "mastery_after": 0.004787954967468977,
+      "uncertainty_after": 0.0005999082713969983,
+      "action": "diagnose_prerequisite",
+      "explanation": "Loops shows low mastery (M=0.00) and weak prerequisites (candidate gaps in: Variables, Conditions). Diagnosing prerequisite knowledge before attempting Loops content."
+    },
+    {
+      "step": 5,
+      "concept_id": 2,
+      "concept_name": "Loops",
+      "student_answer": "Missing i += 1 \u2014 infinite loop",
+      "correctness": 0.9,
+      "misconception_label": "none",
+      "misconception_severity": 0.0,
+      "mastery_after": 0.004889916628599167,
+      "uncertainty_after": 0.0003586431557778269,
+      "action": "diagnose_prerequisite",
+      "explanation": "Loops shows low mastery (M=0.00) and weak prerequisites (candidate gaps in: Variables, Conditions). Diagnosing prerequisite knowledge before attempting Loops content."
+    }
+  ],
+  "final_state": {
+    "Variables": {
+      "M": 0.004,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.0,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Conditions": {
+      "M": 0.003,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.0,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Loops": {
+      "M": 0.005,
+      "MC_sev": 0.041,
+      "MC_class": 0,
+      "U": 0.0,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Functions": {
+      "M": 0.001,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.0,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Recursion": {
+      "M": 0.004,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.0,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Data Structures": {
+      "M": 0.001,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.0,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Algorithms": {
+      "M": 0.005,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.001,
+      "R": 0.8,
+      "F": 0.2
+    }
+  },
+  "system_cost": {
+    "session_total_latency_sec": 0.488,
+    "n_interactions": 5,
+    "agents": [
+      {
+        "agent": "DiagnosisAgent",
+        "call_count": 1,
+        "total_latency_sec": 0.0,
+        "avg_latency_sec": 0.0
+      },
+      {
+        "agent": "AssessmentAgent",
+        "call_count": 5,
+        "total_latency_sec": 0.0001,
+        "avg_latency_sec": 0.0
+      },
+      {
+        "agent": "EvaluationAgent",
+        "call_count": 5,
+        "total_latency_sec": 0.0022,
+        "avg_latency_sec": 0.0004
+      },
+      {
+        "agent": "LearnerModelingAgent",
+        "call_count": 5,
+        "total_latency_sec": 0.4844,
+        "avg_latency_sec": 0.0969
+      },
+      {
+        "agent": "CurriculumPlanningAgent",
+        "call_count": 10,
+        "total_latency_sec": 0.0002,
+        "avg_latency_sec": 0.0
+      },
+      {
+        "agent": "CurriculumAdaptationAgent",
+        "call_count": 10,
+        "total_latency_sec": 0.0001,
+        "avg_latency_sec": 0.0
+      }
+    ],
+    "llm_calls": 5,
+    "llm_tokens": 0,
+    "llm_provider": "MockLLMProvider (offline, no API calls)"
+  }
+}

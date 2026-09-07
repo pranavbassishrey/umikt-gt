@@ -1,5 +1,5 @@
 # SYNTHETIC DATA — Baseline Comparison
-model,brier_score,data_note,ece,mastery_accuracy,mastery_auc,mastery_rmse,mc_accuracy,mc_f1_macro,mean_predictive_variance,retention_mae,retention_rmse,training_time_sec,variant,variant_display
-BKT,,synthetic,,0.05333333333333334,nan,0.8764583119587864,,,,,,0.11,,
-DKT,,synthetic,,0.9993333333333333,nan,0.12789635133910957,,,,,,8.89,,
-Full UMiKT-GAT,0.41191388368348414,synthetic,0.4087373027350844,0.5,0.594883997620464,0.10049109663288369,0.8292682926829268,0.22666666666666666,0.001211422830238007,0.0615613930290792,0.08685447713962181,194.74,full_umikt_gat,Full UMiKT-GAT
+model,brier_score,data_note,ece,gt_thresh,mastery_accuracy,mastery_auc,mastery_rmse,mc_accuracy,mc_f1_macro,mean_predictive_variance,pred_bin_counts,pred_thresh,retention_mae,retention_rmse,training_time_sec,val_pred_thresh,variant,variant_display
+BKT,,synthetic,,,0.5853658536585366,0.5645449137418204,0.8278133748265227,,,,"[47, 35]",,,,0.14,0.9998164355077684,,
+DKT,,synthetic,,,0.7195121951219512,0.8030933967876264,0.1417372962363376,,,,"[38, 44]",,,,16.96,0.15985071659088135,,
+Full UMiKT-GAT,0.21746951219512195,synthetic,0.1054878048780488,0.012899999972432852,0.6585365853658537,0.7471743010113028,0.09233107812831418,0.8292682926829268,0.22666666666666666,0.0007343129916812248,"[23, 59]",0.040874872356653214,0.05527822566559402,0.08836986883936696,200.53,,full_umikt_gat,Full UMiKT-GAT

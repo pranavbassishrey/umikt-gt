@@ -221,7 +221,7 @@ class TestGATLayer:
         if not graph_path.exists():
             pytest.skip("concept_graph.json not found")
         gat = MultiHeadGAT(node_dim=8, out_dim=8, n_heads=1, dynamic=False,
-                            graph_path=graph_path)
+                            graph_path=graph_path).eval()
         # Baseline: zero node features
         node_feats_zero = torch.zeros(N_CONCEPTS, 8)
         out_zero = gat(node_feats_zero, None)

@@ -1,0 +1,48 @@
+{
+  "variant": "lambda_isolation/config_b",
+  "config": {
+    "hidden_dim": 64,
+    "gru_layers": 2,
+    "n_heads": 4,
+    "fusion_order": "temporal_first",
+    "use_graph": true,
+    "use_misconception_head": true,
+    "use_retention": true,
+    "dynamic_gat": true,
+    "dropout_rate": 0.3,
+    "gat_dropout": 0.2,
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 32,
+    "n_epochs": 50,
+    "patience": 10,
+    "lambda_mastery": 1.0,
+    "lambda_misconception": 0.1,
+    "lambda_retention": 0.3,
+    "mc_samples": 20,
+    "llm_provider": "mock",
+    "seq_len": 10,
+    "n_concepts": 7,
+    "seed": 42
+  },
+  "n_params": 61997,
+  "best_epoch": 15,
+  "training_time_sec": 128.18,
+  "test_metrics": {
+    "pred_thresh": 0.016236091032624245,
+    "gt_thresh": 0.012899999972432852,
+    "pred_bin_counts": [
+      29,
+      53
+    ],
+    "mastery_accuracy": 0.5853658536585366,
+    "mastery_rmse": 0.09968745767037987,
+    "mastery_auc": 0.6728138013087447,
+    "mc_f1_macro": 0.22666666666666666,
+    "mc_accuracy": 0.8292682926829268,
+    "retention_rmse": 0.09054029941148446,
+    "retention_mae": 0.058774760935637285,
+    "val_pred_thresh": 0.016236091032624245
+  },
+  "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."
+}

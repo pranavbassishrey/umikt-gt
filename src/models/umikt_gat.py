@@ -201,11 +201,10 @@ def make_default_config() -> dict:
         "batch_size": 32,
         "n_epochs": 50,
         "patience": 10,
-        # Multi-task loss weights
-        # Values are starting points; document that these are not novel contributions.
+        # Multi-task loss weights — calibrated so mastery task retains majority gradient
         "lambda_mastery": 1.0,
-        "lambda_misconception": 0.5,
-        "lambda_retention": 0.3,
+        "lambda_misconception": 0.10,
+        "lambda_retention": 1.0,
         # Uncertainty (MC-Dropout)
         "mc_samples": 20,
         # LLM

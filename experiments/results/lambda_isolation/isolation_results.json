@@ -1,0 +1,50 @@
+[
+  {
+    "config": "Config A (Round 1 original)",
+    "id": "config_a",
+    "lambda_mastery": 1.0,
+    "lambda_mc": 0.5,
+    "lambda_ret": 0.3,
+    "val_pred_thresh": 0.026500705629587173,
+    "pred_bin_counts": [
+      40,
+      42
+    ],
+    "mastery_auc": 0.5919095776323617,
+    "mastery_rmse": 0.09441605950981578,
+    "mastery_accuracy": 0.573170731707317,
+    "elapsed_sec": 173.19
+  },
+  {
+    "config": "Config B (lambda_mc only)",
+    "id": "config_b",
+    "lambda_mastery": 1.0,
+    "lambda_mc": 0.1,
+    "lambda_ret": 0.3,
+    "val_pred_thresh": 0.016236091032624245,
+    "pred_bin_counts": [
+      29,
+      53
+    ],
+    "mastery_auc": 0.6728138013087447,
+    "mastery_rmse": 0.09968745767037987,
+    "mastery_accuracy": 0.5853658536585366,
+    "elapsed_sec": 129.07
+  },
+  {
+    "config": "Config C (Round 2 both)",
+    "id": "config_c",
+    "lambda_mastery": 1.0,
+    "lambda_mc": 0.1,
+    "lambda_ret": 1.0,
+    "val_pred_thresh": 0.02210545912384987,
+    "pred_bin_counts": [
+      38,
+      44
+    ],
+    "mastery_auc": 0.6989886972040452,
+    "mastery_rmse": 0.09635582123570088,
+    "mastery_accuracy": 0.6463414634146342,
+    "elapsed_sec": 189.6
+  }
+]

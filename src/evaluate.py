@@ -160,9 +160,14 @@ def evaluate_with_uncertainty(
     device: torch.device,
     results_dir: Path,
     variant_name: str = "full_umikt_gat",
+    pred_thresh: float | None = None,
+    val_records_by_learner: dict | None = None,
 ) -> dict:
     """
     Full evaluation including MC-Dropout uncertainty estimation.
+    If val_records_by_learner is provided, the binarization threshold
+    pred_thresh is derived strictly from validation MC predictions.
+    If pred_thresh is provided, it is used unchanged.
 
     Returns dict of all computed metrics.
     """
@@ -170,10 +175,34 @@ def evaluate_with_uncertainty(
     mc_samples = config.get("mc_samples", 20)
     mc_wrapper = MCDropoutWrapper(model, n_samples=mc_samples, device=str(device))
 
+    # Derive threshold on validation set via MC-Dropout if requested
+    if val_records_by_learner is not None and pred_thresh is None:
+        all_val_mean = []
+        for lid, recs in val_records_by_learner.items():
+            if not recs:
+                continue
+            x_seq, labels = build_sequences(recs, seq_len=seq_len, device=device)
+            prior_m = torch.full((N_CONCEPTS,), 0.3, device=device)
+            prior_r = torch.full((N_CONCEPTS,), 0.8, device=device)
+            learner_states = torch.stack([
+                prior_m,
+                torch.zeros(N_CONCEPTS, device=device),
+                torch.full((N_CONCEPTS,), 0.5, device=device),
+                prior_r,
+            ], dim=1)
+            mean_p, _, _ = mc_wrapper.sample_predictions(
+                lambda x=x_seq, ls=learner_states: model(x, ls)["mastery"]
+            )
+            mask = labels["active_mask"].cpu().numpy()
+            if mask.any():
+                all_val_mean.extend(mean_p.numpy()[mask].tolist())
+        if all_val_mean:
+            pred_thresh = float(np.median(all_val_mean))
+
     all_mastery_mean = []
     all_mastery_var = []
-    all_mastery_gt_binary = []
     all_mastery_gt_cont = []
+    all_mc_samples = []
     all_mc_pred = []
     all_mc_gt = []
     all_ret_pred = []
@@ -197,7 +226,7 @@ def evaluate_with_uncertainty(
             out = model(x_seq, learner_states)
             return out["mastery"]
 
-        mean_pred, var_pred, _ = mc_wrapper.sample_predictions(forward_fn)
+        mean_pred, var_pred, samples_t = mc_wrapper.sample_predictions(forward_fn)
         mask = labels["active_mask"].cpu().numpy()
         if not mask.any():
             continue
@@ -205,6 +234,7 @@ def evaluate_with_uncertainty(
         all_mastery_mean.extend(mean_pred.numpy()[mask].tolist())
         all_mastery_var.extend(var_pred.numpy()[mask].tolist())
         all_mastery_gt_cont.extend(labels["mastery"].cpu().numpy()[mask].tolist())
+        all_mc_samples.append(samples_t[:, mask].numpy())
 
         # Deterministic pass for misconception / retention
         model.eval()
@@ -222,13 +252,22 @@ def evaluate_with_uncertainty(
     pred_np = np.array(all_mastery_mean)
     var_np = np.array(all_mastery_var)
     gt_cont = np.array(all_mastery_gt_cont)
-    thresh = 0.5 if len(np.unique((gt_cont >= 0.5).astype(int))) > 1 else float(np.median(gt_cont))
-    gt_binary = (gt_cont >= thresh).astype(int)
+
+    has_binary_gt = len(np.unique((gt_cont >= 0.5).astype(int))) > 1
+    gt_thresh = 0.5 if has_binary_gt else float(np.median(gt_cont))
+    if pred_thresh is None:
+        pred_thresh = float(np.median(pred_np))
+    gt_binary = (gt_cont >= gt_thresh).astype(int)
+    pred_binary = (pred_np >= pred_thresh).astype(int)
 
     metrics = {}
+    metrics["pred_thresh"] = float(pred_thresh)
+    metrics["gt_thresh"] = float(gt_thresh)
+    metrics["pred_bin_counts"] = [int(np.sum(pred_binary == 0)), int(np.sum(pred_binary == 1))]
+    metrics["_pred_np"] = pred_np.tolist()
+    metrics["_gt_binary"] = gt_binary.tolist()
 
     # Mastery metrics
-    pred_binary = (pred_np >= thresh).astype(int)
     from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, mean_squared_error
     metrics["mastery_accuracy"] = float(accuracy_score(gt_binary, pred_binary))
     metrics["mastery_rmse"] = float(np.sqrt(mean_squared_error(gt_cont, pred_np)))
@@ -240,9 +279,15 @@ def evaluate_with_uncertainty(
     except Exception:
         metrics["mastery_auc"] = float("nan")
 
-    # Uncertainty metrics
-    metrics["ece"] = compute_ece(pred_np, gt_binary)
-    metrics["brier_score"] = compute_brier_score(pred_np, gt_binary)
+    # Uncertainty metrics: compute calibration on MC-Dropout event probability
+    if all_mc_samples:
+        mc_stack = np.concatenate(all_mc_samples, axis=1)  # (n_samples, N)
+        pred_probs = np.mean(mc_stack >= pred_thresh, axis=0)
+    else:
+        pred_probs = pred_np
+
+    metrics["ece"] = compute_ece(pred_probs, gt_binary)
+    metrics["brier_score"] = compute_brier_score(pred_probs, gt_binary)
     metrics["mean_predictive_variance"] = float(var_np.mean())
 
     # Misconception metrics
@@ -266,9 +311,11 @@ def evaluate_with_uncertainty(
     # ── Print summary ─────────────────────────────────────────────────────────
     print(f"\n{'='*50}")
     print(f"EVALUATION RESULTS — {variant_name} (synthetic data)")
-    print(f"{'='*50}")
     for k, v in metrics.items():
-        print(f"  {k:<30}: {v:.4f}" if not math.isnan(v) else f"  {k:<30}: nan")
+        if isinstance(v, (int, float)):
+            print(f"  {k:<30}: {v:.4f}" if not math.isnan(v) else f"  {k:<30}: nan")
+        else:
+            print(f"  {k:<30}: {v}")
 
     # ── Save reliability diagram ──────────────────────────────────────────────
     results_dir.mkdir(parents=True, exist_ok=True)
@@ -311,7 +358,4 @@ if __name__ == "__main__":
     model = UMiKTGATModel(config).to(device)
     model.load_state_dict(torch.load(checkpoint, map_location=device))
 
-    test_recs = load_synthetic_split("test")
-    test_by_learner = group_by_learner(test_recs)
-
-    evaluate_with_uncertainty(model, test_by_learner, config, device, results_dir, args.variant)
+    evaluate_with_uncertainty(model, test_by_learner, config, device, results_dir, args.variant, val_records_by_learner=val_by_learner)

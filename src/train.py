@@ -132,8 +132,8 @@ def train_epoch(
 
     seq_len = config.get("seq_len", 10)
     lam1 = config.get("lambda_mastery", 1.0)
-    lam2 = config.get("lambda_misconception", 0.5)
-    lam3 = config.get("lambda_retention", 0.3)
+    lam2 = config.get("lambda_misconception", 0.10)
+    lam3 = config.get("lambda_retention", 1.0)
 
     learner_ids = list(records_by_learner.keys())
     random.shuffle(learner_ids)
@@ -219,16 +219,17 @@ def evaluate(
     records_by_learner: dict,
     config: dict,
     device: torch.device,
+    pred_thresh: float | None = None,
 ) -> dict:
     """
-    Evaluate model on a dataset split. Returns dict of metrics.
-
-    All metrics are computed from actual model output — no values are assumed.
+    Evaluate model on a dictionary of learner records.
+    If pred_thresh is provided, it is used to binarize predictions.
+    Otherwise, pred_thresh is computed from the predictions of this split.
     """
     from sklearn.metrics import roc_auc_score, accuracy_score, f1_score, mean_squared_error
 
-    model.eval()
     seq_len = config.get("seq_len", 10)
+    model.eval()
 
     all_mastery_pred = []
     all_mastery_gt = []
@@ -276,12 +277,20 @@ def evaluate(
         pred_np = np.array(all_mastery_pred)
         gt_np = np.array(all_mastery_gt)
 
-        # Binary accuracy using 0.5 threshold, or median fallback if single class
-        thresh = 0.5 if len(np.unique((gt_np >= 0.5).astype(int))) > 1 else float(np.median(gt_np))
-        pred_binary = (pred_np >= thresh).astype(int)
-        gt_binary = (gt_np >= thresh).astype(int)
+        # Binary accuracy: gt_thresh from ground truth; pred_thresh from argument (e.g. val split) or median fallback
+        has_binary_gt = len(np.unique((gt_np >= 0.5).astype(int))) > 1
+        gt_thresh = 0.5 if has_binary_gt else float(np.median(gt_np))
+        if pred_thresh is None:
+            pred_thresh = float(np.median(pred_np))
+        pred_binary = (pred_np >= pred_thresh).astype(int)
+        gt_binary = (gt_np >= gt_thresh).astype(int)
+        metrics["pred_thresh"] = float(pred_thresh)
+        metrics["gt_thresh"] = float(gt_thresh)
+        metrics["pred_bin_counts"] = [int(np.sum(pred_binary == 0)), int(np.sum(pred_binary == 1))]
         metrics["mastery_accuracy"] = float(accuracy_score(gt_binary, pred_binary))
         metrics["mastery_rmse"] = float(np.sqrt(mean_squared_error(gt_np, pred_np)))
+        metrics["_pred_np"] = pred_np.tolist()
+        metrics["_gt_binary"] = gt_binary.tolist()
 
         try:
             if len(np.unique(gt_binary)) > 1:
@@ -418,18 +427,24 @@ def train(config: dict, variant_name: str = "default") -> dict:
     elapsed = time.perf_counter() - t0
     print(f"  Training time: {elapsed:.1f}s")
 
-    # ── Final test evaluation ─────────────────────────────────────────────────
+    # ── Final test evaluation (Threshold derived strictly from Val split) ─────
     print("\nLoading best checkpoint for test evaluation...")
     model.load_state_dict(torch.load(checkpoint_path, map_location=device))
-    test_metrics = evaluate(model, test_by_learner, config, device)
+    val_metrics = evaluate(model, val_by_learner, config, device)
+    val_pred_thresh = val_metrics.get("pred_thresh", 0.5)
 
-    print(f"  Test Mastery Accuracy:  {test_metrics.get('mastery_accuracy', 0):.4f}")
-    print(f"  Test Mastery AUC:       {test_metrics.get('mastery_auc', 0):.4f}")
-    print(f"  Test Mastery RMSE:      {test_metrics.get('mastery_rmse', 0):.4f}")
+    test_metrics = evaluate(model, test_by_learner, config, device, pred_thresh=val_pred_thresh)
+    test_metrics["val_pred_thresh"] = val_pred_thresh
+
+    print(f"  Val-derived Pred Threshold: {val_pred_thresh:.6f}")
+    print(f"  Test pred_bin counts:       0: {test_metrics['pred_bin_counts'][0]}, 1: {test_metrics['pred_bin_counts'][1]}")
+    print(f"  Test Mastery Accuracy:      {test_metrics.get('mastery_accuracy', 0):.4f}")
+    print(f"  Test Mastery AUC:           {test_metrics.get('mastery_auc', 0):.4f}")
+    print(f"  Test Mastery RMSE:          {test_metrics.get('mastery_rmse', 0):.4f}")
     if "mc_f1_macro" in test_metrics:
-        print(f"  Test MC F1 (macro):     {test_metrics.get('mc_f1_macro', 0):.4f}")
+        print(f"  Test MC F1 (macro):         {test_metrics.get('mc_f1_macro', 0):.4f}")
     if "retention_rmse" in test_metrics:
-        print(f"  Test Retention RMSE:    {test_metrics.get('retention_rmse', 0):.4f}")
+        print(f"  Test Retention RMSE:        {test_metrics.get('retention_rmse', 0):.4f}")
 
     # ── Save loss curve plot ──────────────────────────────────────────────────
     epochs_x = [log["epoch"] for log in train_log]

@@ -26,16 +26,16 @@
     "seed": 42
   },
   "n_params": 61997,
-  "best_epoch": 1,
-  "training_time_sec": 54.69,
+  "best_epoch": 26,
+  "training_time_sec": 194.05,
   "test_metrics": {
-    "mastery_accuracy": 1.0,
-    "mastery_rmse": 0.04149595084568243,
-    "mastery_auc": NaN,
-    "mc_f1_macro": 0.1935103244837758,
-    "mc_accuracy": 0.9371428571428572,
-    "retention_rmse": 0.03879927284130424,
-    "retention_mae": 0.012846961358029927
+    "mastery_accuracy": 0.5,
+    "mastery_rmse": 0.09716687135721223,
+    "mastery_auc": 0.578227245687091,
+    "mc_f1_macro": 0.22666666666666666,
+    "mc_accuracy": 0.8292682926829268,
+    "retention_rmse": 0.08685447713962181,
+    "retention_mae": 0.0615613930290792
   },
   "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."
 }

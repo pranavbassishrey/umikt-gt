@@ -428,15 +428,25 @@ class AgentOrchestrator:
                 learner_state=learner_state,
             )
 
-            # Final action selection after state update
-            top2 = self.curriculum_planning(learner_state=learner_state)
-            final_decision = self.curriculum_adaptation(learner_state=learner_state, top_concepts=top2)
+            # Final action selection after state update:
+            # 1. Action for the CURRENT concept after update
+            current_concept_decision = self.curriculum_adaptation(
+                learner_state=learner_state,
+                top_concepts=[(concept_id, decision["priority"])]
+            )
+            # 2. Recommended concept and action for the NEXT step
+            top_next = self.curriculum_planning(learner_state=learner_state)
+            next_decision = self.curriculum_adaptation(
+                learner_state=learner_state,
+                top_concepts=top_next
+            )
 
             print(f"\n  [After update]")
             print(f"  M[{decision['concept_name']}] = {learner_state.mastery[concept_id]:.3f}")
             print(f"  U[{decision['concept_name']}] = {learner_state.uncertainty[concept_id]:.3f}")
-            print(f"  Action:    {final_decision['action']}")
-            print(f"  Rationale: {final_decision['explanation']}")
+            print(f"  Status for {decision['concept_name']}: {current_concept_decision['action']}")
+            print(f"  Rationale:  {current_concept_decision['explanation']}")
+            print(f"  Next target: {next_decision['concept_name']} ({next_decision['action']})")
 
             step_log.append({
                 "step": step,
@@ -448,8 +458,10 @@ class AgentOrchestrator:
                 "misconception_severity": eval_result["misconception_severity"],
                 "mastery_after": learner_state.mastery[concept_id],
                 "uncertainty_after": learner_state.uncertainty[concept_id],
-                "action": final_decision["action"],
-                "explanation": final_decision["explanation"],
+                "action": current_concept_decision["action"],
+                "explanation": current_concept_decision["explanation"],
+                "next_concept": next_decision["concept_name"],
+                "next_action": next_decision["action"],
             })
 
         session_time = time.perf_counter() - t_session_start

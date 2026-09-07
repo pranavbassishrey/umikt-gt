@@ -26,12 +26,12 @@
     "seed": 42
   },
   "n_params": 18753,
-  "best_epoch": 10,
-  "training_time_sec": 27.83,
+  "best_epoch": 7,
+  "training_time_sec": 46.7,
   "test_metrics": {
-    "mastery_accuracy": 1.0,
-    "mastery_rmse": 0.040235708791522294,
-    "mastery_auc": NaN
+    "mastery_accuracy": 0.5,
+    "mastery_rmse": 0.089501278573917,
+    "mastery_auc": 0.637120761451517
   },
   "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."
 }

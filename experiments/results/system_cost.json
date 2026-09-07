@@ -1,5 +1,5 @@
 {
-  "session_total_latency_sec": 0.488,
+  "session_total_latency_sec": 0.523,
   "n_interactions": 5,
   "agents": [
     {
@@ -23,8 +23,8 @@
     {
       "agent": "LearnerModelingAgent",
       "call_count": 5,
-      "total_latency_sec": 0.4844,
-      "avg_latency_sec": 0.0969
+      "total_latency_sec": 0.5194,
+      "avg_latency_sec": 0.1039
     },
     {
       "agent": "CurriculumPlanningAgent",
@@ -34,8 +34,8 @@
     },
     {
       "agent": "CurriculumAdaptationAgent",
-      "call_count": 10,
-      "total_latency_sec": 0.0001,
+      "call_count": 15,
+      "total_latency_sec": 0.0002,
       "avg_latency_sec": 0.0
     }
   ],

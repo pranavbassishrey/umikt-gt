@@ -337,7 +337,8 @@ def main(fast: bool = False):
 
     for variant in ABLATION_VARIANTS:
         print(f"\n{'─'*50}")
-        print(f"Variant: {variant}")
+        print(f"Variant: {variant} (Independent Training Start)")
+        set_seed(42)  # Ensure independent initialization per variant
         cfg = make_ablation_config(variant)
         if fast:
             cfg["n_epochs"] = 5
@@ -347,9 +348,19 @@ def main(fast: bool = False):
         test_metrics = train(cfg, variant_name=variant)
         elapsed = time.perf_counter() - t_start
 
+        # Read train_log.json to print loss progression summary
+        variant_dir = results_base / variant
+        log_file = variant_dir / "train_log.json"
+        if log_file.exists():
+            with open(log_file) as f:
+                t_log = json.load(f)
+            if t_log:
+                start_loss = t_log[0].get("train_total", 0.0)
+                end_loss = t_log[-1].get("train_total", 0.0)
+                print(f"  [Loss progression for {variant}]: Start loss={start_loss:.4f} → End loss={end_loss:.4f} ({len(t_log)} epochs)")
+
         # Run full evaluation with uncertainty for the full model
         if variant == "full_umikt_gat":
-            variant_dir = results_base / variant
             model = UMiKTGATModel(cfg).to(device)
             ckpt = variant_dir / "best_model.pt"
             if ckpt.exists():

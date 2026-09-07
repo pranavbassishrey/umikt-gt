@@ -1,16 +1,16 @@
 {
   "variant": "full_umikt_gat",
   "metrics": {
-    "mastery_accuracy": 1.0,
-    "mastery_rmse": 0.04355673434186284,
-    "mastery_auc": NaN,
-    "ece": 0.020039993068535943,
-    "brier_score": 0.0018518153964042566,
-    "mean_predictive_variance": 0.0006357318512238765,
-    "mc_f1_macro": 0.1935103244837758,
-    "mc_accuracy": 0.9371428571428572,
-    "retention_rmse": 0.03879927284130424,
-    "retention_mae": 0.012846961358029927
+    "mastery_accuracy": 0.5,
+    "mastery_rmse": 0.10049109663288369,
+    "mastery_auc": 0.594883997620464,
+    "ece": 0.4087373027350844,
+    "brier_score": 0.41191388368348414,
+    "mean_predictive_variance": 0.001211422830238007,
+    "mc_f1_macro": 0.22666666666666666,
+    "mc_accuracy": 0.8292682926829268,
+    "retention_rmse": 0.08685447713962181,
+    "retention_mae": 0.0615613930290792
   },
   "mc_samples": 20,
   "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."

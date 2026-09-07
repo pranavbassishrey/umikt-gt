@@ -183,12 +183,13 @@ def evaluate_with_uncertainty(
         if not recs:
             continue
         x_seq, labels = build_sequences(recs, seq_len=seq_len, device=device)
-        mastery_gt = labels["mastery"]
+        prior_m = torch.full((N_CONCEPTS,), 0.3, device=device)
+        prior_r = torch.full((N_CONCEPTS,), 0.8, device=device)
         learner_states = torch.stack([
-            mastery_gt,
+            prior_m,
             torch.zeros(N_CONCEPTS, device=device),
             torch.full((N_CONCEPTS,), 0.5, device=device),
-            labels["retention"],
+            prior_r,
         ], dim=1)
 
         # MC-Dropout uncertainty
@@ -197,34 +198,37 @@ def evaluate_with_uncertainty(
             return out["mastery"]
 
         mean_pred, var_pred, _ = mc_wrapper.sample_predictions(forward_fn)
+        mask = labels["active_mask"].cpu().numpy()
+        if not mask.any():
+            continue
 
-        all_mastery_mean.extend(mean_pred.numpy().tolist())
-        all_mastery_var.extend(var_pred.numpy().tolist())
-        all_mastery_gt_cont.extend(labels["mastery"].cpu().numpy().tolist())
-        all_mastery_gt_binary.extend((labels["mastery"].cpu().numpy() >= 0.5).astype(int).tolist())
+        all_mastery_mean.extend(mean_pred.numpy()[mask].tolist())
+        all_mastery_var.extend(var_pred.numpy()[mask].tolist())
+        all_mastery_gt_cont.extend(labels["mastery"].cpu().numpy()[mask].tolist())
 
         # Deterministic pass for misconception / retention
         model.eval()
         outputs = model(x_seq, learner_states)
 
         if "misconception" in outputs:
-            mc_pred = outputs["misconception"].argmax(dim=-1)
-            all_mc_pred.extend(mc_pred.cpu().numpy().tolist())
-            all_mc_gt.extend(labels["misconception"].cpu().numpy().tolist())
+            mc_pred = outputs["misconception"].argmax(dim=-1).cpu().numpy()[mask]
+            all_mc_pred.extend(mc_pred.tolist())
+            all_mc_gt.extend(labels["misconception"].cpu().numpy()[mask].tolist())
 
         if "retention" in outputs:
-            all_ret_pred.extend(outputs["retention"].cpu().numpy().tolist())
-            all_ret_gt.extend(labels["retention"].cpu().numpy().tolist())
+            all_ret_pred.extend(outputs["retention"].cpu().numpy()[mask].tolist())
+            all_ret_gt.extend(labels["retention"].cpu().numpy()[mask].tolist())
 
     pred_np = np.array(all_mastery_mean)
     var_np = np.array(all_mastery_var)
-    gt_binary = np.array(all_mastery_gt_binary)
     gt_cont = np.array(all_mastery_gt_cont)
+    thresh = 0.5 if len(np.unique((gt_cont >= 0.5).astype(int))) > 1 else float(np.median(gt_cont))
+    gt_binary = (gt_cont >= thresh).astype(int)
 
     metrics = {}
 
     # Mastery metrics
-    pred_binary = (pred_np >= 0.5).astype(int)
+    pred_binary = (pred_np >= thresh).astype(int)
     from sklearn.metrics import accuracy_score, roc_auc_score, f1_score, mean_squared_error
     metrics["mastery_accuracy"] = float(accuracy_score(gt_binary, pred_binary))
     metrics["mastery_rmse"] = float(np.sqrt(mean_squared_error(gt_cont, pred_np)))

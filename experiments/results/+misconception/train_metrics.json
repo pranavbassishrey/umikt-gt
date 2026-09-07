@@ -26,14 +26,14 @@
     "seed": 42
   },
   "n_params": 59884,
-  "best_epoch": 1,
-  "training_time_sec": 55.9,
+  "best_epoch": 19,
+  "training_time_sec": 152.04,
   "test_metrics": {
-    "mastery_accuracy": 1.0,
-    "mastery_rmse": 0.04165213846902839,
-    "mastery_auc": NaN,
-    "mc_f1_macro": 0.1935103244837758,
-    "mc_accuracy": 0.9371428571428572
+    "mastery_accuracy": 0.5,
+    "mastery_rmse": 0.08997292060267995,
+    "mastery_auc": 0.5383700178465199,
+    "mc_f1_macro": 0.22666666666666666,
+    "mc_accuracy": 0.8292682926829268
   },
   "data_note": "All data is SYNTHETIC. See DATASET_CARD.md."
 }

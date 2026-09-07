@@ -69,6 +69,7 @@ def build_sequences(
     labels_mc = torch.zeros(N_CONCEPTS, dtype=torch.long, device=device)
     labels_ret = torch.zeros(N_CONCEPTS, device=device)
     temporal_gaps = torch.zeros(N_CONCEPTS, device=device)
+    active_mask = torch.zeros(N_CONCEPTS, dtype=torch.bool, device=device)
 
     for cid in range(N_CONCEPTS):
         recs = by_concept.get(cid, [])
@@ -77,6 +78,7 @@ def build_sequences(
             x_seq[cid, t] = torch.tensor(fv, dtype=torch.float32, device=device)
 
         if recs:
+            active_mask[cid] = True
             last_rec = recs[-1]
             lab = build_labels(last_rec)
             labels_mastery[cid] = lab["mastery"]
@@ -89,6 +91,7 @@ def build_sequences(
         "misconception": labels_mc,
         "retention": labels_ret,
         "temporal_gaps": temporal_gaps,
+        "active_mask": active_mask,
     }
 
 
@@ -143,35 +146,51 @@ def train_epoch(
         x_seq, labels = build_sequences(recs, seq_len=seq_len, device=device)
 
         # Build initial learner state for dynamic GAT
-        # At training time, we use ground-truth mastery as the learner state seed
-        mastery_gt = labels["mastery"]
+        # IMPORTANT FIX: Do NOT pass target mastery_gt into learner_states input (that causes data leakage!)
+        # Pass realistic prior/estimated state [M=0.3, MC=0.0, U=0.5, R=0.8]
+        prior_m = torch.full((N_CONCEPTS,), 0.3, device=device)
+        prior_r = torch.full((N_CONCEPTS,), 0.8, device=device)
         learner_states = torch.stack([
-            mastery_gt,                                 # M
-            torch.zeros(N_CONCEPTS, device=device),    # MC (placeholder)
-            torch.full((N_CONCEPTS,), 0.5, device=device),  # U (placeholder)
-            labels["retention"],                        # R
+            prior_m,                                    # M prior
+            torch.zeros(N_CONCEPTS, device=device),     # MC
+            torch.full((N_CONCEPTS,), 0.5, device=device), # U
+            prior_r,                                    # R prior
         ], dim=1)  # (N_CONCEPTS, 4)
 
         outputs = model(x_seq, learner_states)
 
+        # Sanity check logging on first batch of first epoch
+        if n_batches == 0 and not hasattr(train_epoch, "_logged_sanity"):
+            train_epoch._logged_sanity = True
+            feat_min, feat_max, feat_mean = x_seq.min().item(), x_seq.max().item(), x_seq.mean().item()
+            raw_logits = model.mastery_head.net[:-1](outputs["hidden"]).squeeze(-1) if hasattr(model.mastery_head, "net") else outputs["mastery"]
+            print(f"\n  [SANITY CHECK - Train Batch 0]")
+            print(f"    x_seq tensor stats  : min={feat_min:.3f}, max={feat_max:.3f}, mean={feat_mean:.3f}, shape={list(x_seq.shape)}")
+            print(f"    Raw mastery logits  : min={raw_logits.min().item():.3f}, max={raw_logits.max().item():.3f}, mean={raw_logits.mean().item():.3f}")
+            print(f"    Post-sigmoid mastery: min={outputs['mastery'].min().item():.3f}, max={outputs['mastery'].max().item():.3f}, mean={outputs['mastery'].mean().item():.3f}")
+
+        mask = labels["active_mask"]
+        if not mask.any():
+            continue
+
         # ── Mastery loss ────────────────────────────────────────────────────
-        pred_mastery = outputs["mastery"]  # (N_CONCEPTS,)
-        L_mastery = mastery_loss_fn(pred_mastery, labels["mastery"])
+        pred_mastery = outputs["mastery"][mask]
+        L_mastery = mastery_loss_fn(pred_mastery, labels["mastery"][mask])
 
         loss = lam1 * L_mastery
         total_mastery_loss += L_mastery.item()
 
         # ── Misconception loss ──────────────────────────────────────────────
         if mc_loss_fn is not None and "misconception" in outputs:
-            pred_mc = outputs["misconception"]  # (N_CONCEPTS, 7)
-            L_mc = mc_loss_fn(pred_mc, labels["misconception"])
+            pred_mc = outputs["misconception"][mask]  # (N_active, 7)
+            L_mc = mc_loss_fn(pred_mc, labels["misconception"][mask])
             loss = loss + lam2 * L_mc
             total_mc_loss += L_mc.item()
 
         # ── Retention loss ──────────────────────────────────────────────────
         if retention_loss_fn is not None and "retention" in outputs:
-            pred_ret = outputs["retention"]  # (N_CONCEPTS,)
-            L_ret = retention_loss_fn(pred_ret, labels["retention"])
+            pred_ret = outputs["retention"][mask]  # (N_active,)
+            L_ret = retention_loss_fn(pred_ret, labels["retention"][mask])
             loss = loss + lam3 * L_ret
             total_ret_loss += L_ret.item()
 
@@ -223,28 +242,32 @@ def evaluate(
             continue
         x_seq, labels = build_sequences(recs, seq_len=seq_len, device=device)
 
-        mastery_gt = labels["mastery"]
+        prior_m = torch.full((N_CONCEPTS,), 0.3, device=device)
+        prior_r = torch.full((N_CONCEPTS,), 0.8, device=device)
         learner_states = torch.stack([
-            mastery_gt,
+            prior_m,
             torch.zeros(N_CONCEPTS, device=device),
             torch.full((N_CONCEPTS,), 0.5, device=device),
-            labels["retention"],
+            prior_r,
         ], dim=1)
 
         outputs = model(x_seq, learner_states)
+        mask = labels["active_mask"].cpu().numpy()
+        if not mask.any():
+            continue
 
-        all_mastery_pred.extend(outputs["mastery"].cpu().numpy().tolist())
-        all_mastery_gt.extend(labels["mastery"].cpu().numpy().tolist())
+        all_mastery_pred.extend(outputs["mastery"].cpu().numpy()[mask].tolist())
+        all_mastery_gt.extend(labels["mastery"].cpu().numpy()[mask].tolist())
 
         if "misconception" in outputs:
             mc_probs = torch.softmax(outputs["misconception"], dim=-1)
-            mc_pred_class = mc_probs.argmax(dim=-1)
-            all_mc_pred.extend(mc_pred_class.cpu().numpy().tolist())
-            all_mc_gt.extend(labels["misconception"].cpu().numpy().tolist())
+            mc_pred_class = mc_probs.argmax(dim=-1).cpu().numpy()[mask]
+            all_mc_pred.extend(mc_pred_class.tolist())
+            all_mc_gt.extend(labels["misconception"].cpu().numpy()[mask].tolist())
 
         if "retention" in outputs:
-            all_ret_pred.extend(outputs["retention"].cpu().numpy().tolist())
-            all_ret_gt.extend(labels["retention"].cpu().numpy().tolist())
+            all_ret_pred.extend(outputs["retention"].cpu().numpy()[mask].tolist())
+            all_ret_gt.extend(labels["retention"].cpu().numpy()[mask].tolist())
 
     metrics = {}
 
@@ -253,9 +276,10 @@ def evaluate(
         pred_np = np.array(all_mastery_pred)
         gt_np = np.array(all_mastery_gt)
 
-        # Binary accuracy using 0.5 threshold
-        pred_binary = (pred_np >= 0.5).astype(int)
-        gt_binary = (gt_np >= 0.5).astype(int)
+        # Binary accuracy using 0.5 threshold, or median fallback if single class
+        thresh = 0.5 if len(np.unique((gt_np >= 0.5).astype(int))) > 1 else float(np.median(gt_np))
+        pred_binary = (pred_np >= thresh).astype(int)
+        gt_binary = (gt_np >= thresh).astype(int)
         metrics["mastery_accuracy"] = float(accuracy_score(gt_binary, pred_binary))
         metrics["mastery_rmse"] = float(np.sqrt(mean_squared_error(gt_np, pred_np)))
 
@@ -407,6 +431,27 @@ def train(config: dict, variant_name: str = "default") -> dict:
     if "retention_rmse" in test_metrics:
         print(f"  Test Retention RMSE:    {test_metrics.get('retention_rmse', 0):.4f}")
 
+    # ── Save loss curve plot ──────────────────────────────────────────────────
+    epochs_x = [log["epoch"] for log in train_log]
+    train_losses_y = [log["train_total"] for log in train_log]
+    val_rmse_y = [log.get("val_mastery_rmse", 0) for log in train_log]
+
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    plt.figure(figsize=(7, 4))
+    plt.plot(epochs_x, train_losses_y, label="Train Total Loss", color="#1f77b4", linewidth=2)
+    plt.plot(epochs_x, val_rmse_y, label="Val Mastery RMSE", color="#ff7f0e", linestyle="--", linewidth=2)
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss / Metric")
+    plt.title(f"Training Loss Curve — {variant_name} (synthetic data)")
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(results_dir / "train_loss_curve.png", dpi=150)
+    plt.close()
+
     # ── Save results ──────────────────────────────────────────────────────────
     results = {
         "variant": variant_name,
@@ -424,7 +469,8 @@ def train(config: dict, variant_name: str = "default") -> dict:
     with open(results_dir / "train_log.json", "w") as f:
         json.dump(train_log, f, indent=2)
 
-    print(f"\nResults saved to: {results_dir}")
+    print(f"\nLoss curve saved: {results_dir / 'train_loss_curve.png'}")
+    print(f"Results saved to:  {results_dir}")
     return test_metrics
 
 

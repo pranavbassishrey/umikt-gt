@@ -78,16 +78,16 @@ CONCEPT_MISCONCEPTION_AFFINITY = [
 
 # Misconception severity given class is non-none: Beta(2,3) approximated
 # A misconception, when present, is more likely to be mild-moderate than severe.
-MISCONCEPTION_SEVERITY_MEAN = 0.40
-MISCONCEPTION_SEVERITY_STD = 0.20
+MISCONCEPTION_SEVERITY_MEAN = 0.45
+MISCONCEPTION_SEVERITY_STD = 0.25
 
 # Forgetting rate: global λ prior
 FORGETTING_RATE_MEAN = 0.05   # per hour
 FORGETTING_RATE_STD = 0.02    # learner variation
 
-# Learning rate (logistic growth rate) prior
+# Learning rate (logistic growth rate) prior — tuned so mastery spans [0.05, 0.95] across session
 LEARNING_RATE_MEAN = 0.15
-LEARNING_RATE_STD = 0.05
+LEARNING_RATE_STD = 0.06
 
 
 def _softmax(x):
@@ -151,9 +151,9 @@ class LearnerSimulator:
             for _ in range(N_CONCEPTS)
         ]
 
-        # Initial mastery: low, scaled by concept position (later concepts harder to start)
+        # Initial mastery: lower start with higher variance across learners
         self.mastery = [
-            _clip(rng.gauss(0.10 - i * 0.01, 0.05))
+            _clip(rng.gauss(0.20 - i * 0.015, 0.08))
             for i in range(N_CONCEPTS)
         ]
 
@@ -213,15 +213,15 @@ class LearnerSimulator:
             # Correct: logistic-style increment, larger when far from ceiling
             delta = self.learning_rates[concept_id] * (1.0 - current) * (1 + prereq_boost)
             # Misconception slows learning even when correct (student may be pattern-matching)
-            mc_penalty = 0.3 * self.misconception_severity[concept_id]
+            mc_penalty = 0.5 * self.misconception_severity[concept_id]
             self.mastery[concept_id] = _clip(current + delta * (1 - mc_penalty))
         else:
             # Incorrect: slight decrease
-            self.mastery[concept_id] = _clip(current - 0.02)
+            self.mastery[concept_id] = _clip(current - 0.03)
 
         # Misconception resolution: small probability of resolving on correct answer
         if correctness > 0.5 and self.misconception_class[concept_id] != 0:
-            resolve_prob = 0.15 * correctness
+            resolve_prob = 0.12 * correctness
             if self.rng.random() < resolve_prob:
                 self.misconception_class[concept_id] = 0
                 self.misconception_severity[concept_id] = 0.0
@@ -232,12 +232,12 @@ class LearnerSimulator:
         Misconceptions reduce effective probability of correct answer.
         """
         p_correct = self.mastery[concept_id]
-        mc_penalty = 0.4 * self.misconception_severity[concept_id]
+        mc_penalty = 0.45 * self.misconception_severity[concept_id]
         p_correct = _clip(p_correct - mc_penalty)
 
-        # Bernoulli sample with small slip/guess added
-        p_slip = 0.05
-        p_guess = 0.08
+        # Bernoulli sample with slip/guess added
+        p_slip = 0.10
+        p_guess = 0.12
         p_obs = (1 - p_slip) * p_correct + p_guess * (1 - p_correct)
         return 1.0 if self.rng.random() < p_obs else 0.0
 

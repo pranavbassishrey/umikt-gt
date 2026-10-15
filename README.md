@@ -5,14 +5,6 @@
 A research codebase for the paper:
 > *A Multi-Agent LLM Framework with an Uncertainty-Aware, Misconception-Informed Temporal Graph Knowledge Tracing Model for Autonomous Curriculum Adaptation*
 
-> [!WARNING]
-> **All quantitative results in this codebase are produced on SYNTHETIC data** unless
-> the ASSISTments download in `data/layer1_public_kt/download_assistments.py` succeeds.
-> Check `data/layer1_public_kt/layer1_metadata.json` — if `"is_real_data": false`, all
-> Phase 3 and baseline metrics are synthetic fallback. See `DATASET_CARD.md`.
-
----
-
 ## Project Structure
 
 ```

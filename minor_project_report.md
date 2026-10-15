@@ -1,10 +1,11 @@
-# Minor Project Comprehensive Research Report: Uncertainty-Aware Multidimensional Knowledge Tracing with Graph Attention Networks (UMiKT-GAT)
+# Minor Project Comprehensive Research Report: Uncertainty-Aware Multidimensional Knowledge Tracing with Concept-Conditioned Recurrent Networks (UMiKT-GAT v2)
 
 **Project Title:** UMiKT-GAT: Uncertainty-Aware Multidimensional Knowledge Tracing with Graph Attention Networks  
+**Evaluated Architecture:** Shared-Sequence, Concept-Conditioned Recurrent Model with GAT-Style Self-Attention (v2)  
 **Dataset:** ASSISTments / FoundationalASSIST (Real Human Student Interactions, Common Core Mathematics, Grades 6–8)  
 **Primary Evaluation:** Strictly Aligned Next-Response Prediction on Disjoint Student Trajectories (11,700 Targets)  
 **Execution Environment:** PyTorch 2.14.0+cu130 | NVIDIA GeForce RTX 3050 Laptop GPU (4 GB VRAM) | Linux x86_64  
-**Repository Branch:** `main`  
+**Reproduction Script:** `scripts/reproduce_all_report_metrics.py` | **Repository Branch:** `main`  
 
 ---
 
@@ -13,17 +14,17 @@
 This report documents the final experimental findings, architectural evolution, comparative benchmarks, and failure mode analyses for the **UMiKT-GAT** research project. 
 
 The primary research inquiry investigated:
-> *Can an educational knowledge-tracing architecture that integrates chronological sequence modeling, relational prerequisite graph propagation, and uncertainty estimation predict future learner correctness better than established baselines (BKT, DKT) on real-world student interaction data?*
+> *Can an educational knowledge-tracing architecture that integrates chronological sequence modeling, dynamic concept-state conditioning, and uncertainty estimation predict future learner correctness better than established baselines (BKT, DKT) on real-world student interaction data?*
 
 ### The Core Finding:
 Under the reported learner-disjoint next-response evaluation protocol on `FoundationalASSIST`, **UMiKT-GAT v2 achieved a ROC-AUC of 0.8017**, compared with **0.7140 for DKT** and **0.6974 for BKT**. The reported results indicate improved discrimination and a lower Brier score for UMiKT-GAT v2. Both neural models were evaluated on the exact same 11,700 target interactions according to the repository's alignment audit. 
 
-An architectural audit reveals that UMiKT-GAT v2's performance gain is primarily driven by its **chronological shared sequence GRU backbone, dynamic concept-state conditioning, and target-specific projection head**. The independent contribution of cross-node prerequisite message passing remains a hypothesis to be evaluated through targeted graph ablations.
+An architectural audit reveals that UMiKT-GAT v2's performance gain is primarily driven by its **chronological shared sequence GRU backbone, dynamic concept-state conditioning, target-specific projection head, and cosine annealing schedule**. Because the evaluated checkpoint operated with identity adjacency in the graph attention layer, the model functioned as a concept-conditioned self-attentive network; the independent causal contribution of active cross-node prerequisite edge propagation remains an open hypothesis to be evaluated through targeted graph ablations.
 
 ### Key Verified Results on Real Data:
 1. **Predictive Performance:** UMiKT-GAT v2 achieved an **ROC-AUC of 0.8017** and **PR-AUC of 0.8508**, exceeding the standard **DKT baseline (ROC-AUC 0.7140, PR-AUC 0.7693)** by **+0.0877 AUC** and **BKT (ROC-AUC 0.6974)** by **+0.1043 AUC**.
-2. **Learner-Clustered Statistical Significance:** To account for intra-student correlation across the 39 sequential predictions per learner, a **learner-level clustered bootstrap** ($B = 2,000$ resamples of 300 test learners with replacement) was conducted. The 95% clustered confidence interval on the AUC delta is strictly positive: **$[+0.0811, +0.0954]$** with zero non-positive exceedances in 2,000 resamples (empirical resolution limit $p < 0.0005$). A paired McNemar test confirmed significant differences in paired classification errors at threshold 0.5 ($p = 9.27 \times 10^{-45}$).
-3. **Probabilistic Accuracy & Calibration:** UMiKT-GAT v2 achieved a **Brier score of 0.1764**, a 15.6% reduction compared to DKT (**0.2090**) and 43.8% reduction compared to BKT (**0.3138**). Both neural models achieved excellent calibration (**ECE $\approx 0.0128$**); Murphy's Brier score decomposition proves that UMiKT-GAT v2's lower Brier score is driven almost entirely by **higher resolution / sharpness (0.0648 vs. 0.0325)** while maintaining near-zero reliability error ($\approx 0.0002$).
+2. **Learner-Clustered Statistical Bootstrap:** To account for intra-student correlation across the 39 sequential predictions per learner, a **learner-level clustered bootstrap** ($B = 2,000$ resamples of 300 test learners with replacement) was conducted. All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference. The percentile 95% confidence interval was **$[+0.0811, +0.0954]$**. No non-positive differences were observed among the replicates. A paired McNemar test confirmed significant differences in paired classification errors at threshold 0.5 ($p = 9.27 \times 10^{-45}$).
+3. **Probabilistic Accuracy & 10-Bin Brier Decomposition:** UMiKT-GAT v2 achieved a **Brier score of 0.1764**, a 15.6% reduction compared to DKT (**0.2090**) and 43.8% reduction compared to BKT (**0.3138**). Both neural models achieved low Expected Calibration Error (**ECE $\approx 0.0128$**); a 10-bin Murphy Brier score decomposition shows that UMiKT-GAT v2's lower Brier score is driven almost entirely by **higher resolution / sharpness (0.0648 vs. 0.0325)** while maintaining near-zero reliability error ($\approx 0.0002$).
 4. **Target Alignment Audit:** An exhaustive audit verified row-level concordance between DKT and UMiKT-GAT v2 across all 11,700 targets with zero identifier, concept, or label mismatches.
 5. **Trade-offs & Resource Requirements:** UMiKT-GAT v2 introduces a ~6.6× parameter expansion over DKT (399,617 vs. 60,000 parameters), higher training compute (262.05s vs. 113.87s on GPU) compared to tabular BKT (2.76s on CPU), and loss of BKT's closed-form psychometric parameters.
 
@@ -34,13 +35,13 @@ An architectural audit reveals that UMiKT-GAT v2's performance gain is primarily
 Knowledge Tracing (KT) models the dynamic latent state of a learner’s understanding over time to forecast future performance and guide personalized curriculum sequencing.
 
 ```
-       BKT (1995)                      DKT (2015)                     UMiKT-GAT v2 (Proposed)
+       BKT (1995)                      DKT (2015)                     UMiKT-GAT v2 (Evaluated)
   ┌──────────────────┐            ┌──────────────────┐            ┌──────────────────────────────┐
   │ Independent HMMs │            │   Recurrent NN   │            │ Chronological Shared GRU     │
-  │ per Concept      │            │ (Black-box LSTM) │            │   + Prerequisite Graph GAT   │
+  │ per Concept      │            │ (Black-box LSTM) │            │ + Concept-State Attention    │
   └────────┬─────────┘            └────────┬─────────┘            └──────────────┬───────────────┘
            │                               │                                     │
-  • No cross-concept transfer    • Recurrent sequential memory  • Explicit relational inductive bias
+  • No cross-concept transfer    • Recurrent sequential memory  • Unified chronological backbone
   • Rigid 2-state latent Markov  • Unstructured concept tokens  • Dynamic concept-state context
   • Psychometric interpretability• Implicit co-occurrence only  • High-resolution probabilities
 ```
@@ -53,22 +54,22 @@ BKT represents student mastery as a latent binary variable in a two-state Hidden
 - $P(S)$: Slip probability (incorrect response despite mastery)
 
 **Theoretical Constraints:**
-- **Independence Assumption:** BKT treats every educational concept as an independent Markov chain. An interaction on *"Ratios & Proportions"* yields zero Bayesian update on *"Expressions & Equations"*, ignoring curriculum prerequisites.
+- **Independence Assumption:** BKT treats every educational concept as an independent Markov chain. An interaction on *"Ratios & Proportions"* yields zero Bayesian update on *"Expressions & Equations"*, ignoring curriculum progression.
 - **Fixed Transition Dynamics:** Transition probability $P(T)$ is static across interactions and does not scale dynamically with student response latency, attempt counts, or temporal decay.
 
 ### 1.2 Deep Knowledge Tracing (DKT)
 DKT replaced independent HMMs with high-capacity recurrent neural networks (LSTM), vectorizing input interactions as embedded $(c_t, y_t)$ pairs.
 
 **Theoretical Comparison:**
-- **Implicit vs. Explicit Concept Relationships:** DKT *can* learn concept co-occurrences indirectly from sequential data patterns. However, it treats concept IDs as arbitrary categorical indices without an explicit structural prior. On datasets with diverse concepts and sparse cross-skill transitions, the recurrent hidden state must divide capacity between temporal tracking and discovering relational structure from scratch.
-- **Unstructured Projection:** DKT applies a linear projection from the hidden state $h_t$ across all concepts simultaneously, rather than routing context through an educational prerequisite graph.
+- **Implicit vs. Explicit Concept Conditioning:** DKT *can* learn concept co-occurrences indirectly from sequential data patterns. However, it treats concept IDs as arbitrary categorical indices without explicit concept-state features. On datasets with diverse concepts, the recurrent hidden state must divide capacity between temporal tracking and discovering relational structure from scratch.
+- **Unstructured Projection:** DKT applies a linear projection from the hidden state $h_t$ across all concepts simultaneously, rather than explicitly conditioning the output head on target concept features.
 
-### 1.3 The Proposed UMiKT-GAT Architecture
-UMiKT-GAT integrates chronological sequence modeling with graph-based relational context:
+### 1.3 The UMiKT-GAT v2 Architecture
+UMiKT-GAT v2 addresses these constraints through three core design principles:
 1. **Shared Chronological Sequence Backbone:** A multi-layer GRU processes student interactions chronologically across all concepts to capture student learning speed, momentum, and response patterns.
 2. **Dynamic Concept-State Conditioning:** Cumulative concept frequency, historical success rate (mastery proxy), and empirical difficulty are encoded into node features.
-3. **Graph Attention Network (GAT):** An educational prerequisite DAG provides structural inductive bias to propagate concept representations across related mathematical skills using multi-head attention.
-4. **Target-Specific Next-Response Head:** To predict correctness on concept $c_{t+1}$, the network conditions jointly on the recurrent trajectory $h_t$ and the concept-state node representation of $c_{t+1}$.
+3. **Concept Attention Layer:** A self-attentive multi-head projection module processes concept representations conditioned on learner state.
+4. **Target-Specific Next-Response Head:** To predict correctness on concept $c_{t+1}$, the network conditions jointly on the recurrent trajectory $h_t$ and the concept-state representation of $c_{t+1}$.
 
 ---
 
@@ -140,7 +141,7 @@ All metrics below are computed on the 11,700 verified test predictions:
 | **BKT Baseline** | 0.6974 | — | 0.6647 | 0.5602 | 0.3138 | — | **28** | **2.76s** (CPU) | <0.1s |
 | **DKT Baseline (LSTM)** | 0.7140 | 0.7693 | 0.6713 | 0.4571 | 0.2090 | 0.0128 | ~60,000 | 113.87s (GPU) | 1.10s |
 | **UMiKT-GAT v1 (Broken Baseline)** | 0.6114 | 0.6857 | 0.5899 | 0.6006 | 0.3607 | 0.3450 | 385,000 | 480.0s (GPU) | 15.20s |
-| **UMiKT-GAT v2 (Proposed)** | **0.8017** | **0.8508** | **0.7313** | **0.4200** | **0.1764** | **0.0128** | 399,617 | 262.05s (GPU) | 12.54s |
+| **UMiKT-GAT v2 (Evaluated)** | **0.8017** | **0.8508** | **0.7313** | **0.4200** | **0.1764** | **0.0128** | 399,617 | 262.05s (GPU) | 12.54s |
 
 *Hardware context: All neural models trained and evaluated on an NVIDIA GeForce RTX 3050 Laptop GPU (CUDA, PyTorch 2.14.0+cu130, batch size = 64). BKT fit on Intel CPU via Expectation-Maximization (25 iterations). Test latencies measure complete evaluation across all 11,700 predictions, including batch collation and tensor forward passes (0.094 ms/item for DKT; 1.07 ms/item for UMiKT-v2).*
 
@@ -162,39 +163,40 @@ All metrics below are computed on the 11,700 verified test predictions:
 
 To evaluate whether the observed AUC advantage is statistically robust, we report both interaction-level and learner-clustered statistical analyses:
 
-| Statistical Test | Unit of Resampling | Resamples ($B$) | Metric Delta ($\text{v2} - \text{DKT}$) | 95% Confidence Interval | $p$-value / Resolution |
+| Statistical Test | Unit of Resampling | Resamples ($B$) | Metric Delta ($\text{v2} - \text{DKT}$) | 95% Confidence Interval | Result Summary |
 |---|---|:---:|:---:|:---:|:---:|
-| **Standard Paired Bootstrap** | 11,700 individual interactions | 2,000 | +0.0877 AUC | $[+0.0797, +0.0956]$ | $p < 0.0005$ (0/2000 non-positive) |
-| **Learner-Clustered Bootstrap** | **300 test learners (39 targets each)** | **2,000** | **+0.0881 AUC** | **$[+0.0811, +0.0954]$** | **$p < 0.0005$** (0/2000 non-positive) |
-| **DKT Clustered Baseline CI** | 300 test learners | 2,000 | — | $[0.6971, 0.7288]$ | — |
-| **UMiKT-v2 Clustered Baseline CI**| 300 test learners | 2,000 | — | $[0.7897, 0.8126]$ | — |
+| **Standard Paired Bootstrap** | 11,700 individual interactions | 2,000 | +0.0877 AUC | $[+0.0797, +0.0956]$ | 2,000 / 2,000 replicates positive |
+| **Learner-Clustered Bootstrap** | **300 test learners (39 targets each)** | **2,000** | **+0.0881 AUC** | **$[+0.0811, +0.0954]$** | **All 2,000 replicates positive** |
+| **DKT Clustered Baseline CI** | 300 test learners | 2,000 | — | $[0.6971, 0.7288]$ | Baseline interval |
+| **UMiKT-v2 Clustered Baseline CI**| 300 test learners | 2,000 | — | $[0.7897, 0.8126]$ | Non-overlapping with DKT |
 | **McNemar's Paired Test** | 11,700 paired binary outcomes (thresh 0.5) | N/A | Discordant: 1598 vs 896 | $\chi^2 = 197.8$ | $p = 9.27 \times 10^{-45}$ |
 
 **Interpretation:** 
-- Resampling by learner clusters accounts for potential correlation among predictions from the same student. The clustered 95% bootstrap CI on the AUC delta ($[+0.0811, +0.0954]$) remains strictly positive. With zero exceedances in 2,000 resamples, the empirical resolution limit is $p < 0.0005$.
+- Resampling by learner clusters accounts for potential correlation among predictions from the same student. All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference. The percentile 95% confidence interval was **$[+0.0811, +0.0954]$**. No non-positive differences were observed among the replicates.
 - The 95% clustered baseline intervals for DKT ($[0.6971, 0.7288]$) and UMiKT-v2 ($[0.7897, 0.8126]$) are separated by a noticeable margin.
 - McNemar's test confirms a statistically significant difference in paired binary classification errors at threshold 0.5 ($p = 9.27 \times 10^{-45}$); it evaluates discrete classification accuracy rather than the continuous ranking measured by AUC.
 
-### 3.3 Murphy's Brier Score Decomposition & Calibration Analysis
+### 3.3 10-Bin Murphy Brier Score Decomposition & Calibration Analysis
 
 Brier score measures mean squared probability error:
 $$\text{Brier} = \frac{1}{N}\sum_{i=1}^N (\hat{p}_i - y_i)^2$$
-Under Murphy's exact mathematical decomposition (Murphy, 1973):
-$$\text{Brier} = \text{Reliability (Calibration Error)} - \text{Resolution (Sharpness)} + \text{Uncertainty}$$
+Under Murphy's partition decomposition (Murphy, 1973) approximated across 10 probability bins:
+$$\text{Brier} \approx \text{Reliability (Calibration Error)} - \text{Resolution (Sharpness)} + \text{Uncertainty}$$
 where:
 - $\text{Uncertainty} = \bar{y}(1 - \bar{y})$ reflects base-rate variance ($\bar{y} = 0.589915$).
 - $\text{Reliability} = \frac{1}{N} \sum_{k=1}^K n_k (\bar{p}_k - \bar{y}_k)^2$ measures deviations between bin predictions and empirical success rates.
 - $\text{Resolution} = \frac{1}{N} \sum_{k=1}^K n_k (\bar{y}_k - \bar{y})^2$ measures the model's ability to separate outcomes into confident bins differing from the base rate.
 
-Computing this exact decomposition across 10 probability bins reveals:
+Computing this 10-bin decomposition reveals:
 
 | Metric Component | DKT Baseline | UMiKT-GAT v2 | Difference ($\text{v2} - \text{DKT}$) | Interpretation |
 |---|:---:|:---:|:---:|---|
 | **Dataset Uncertainty** | 0.241915 | 0.241915 | 0.000000 | Fixed by test base rate ($58.99\%$) |
 | **Reliability Component** | 0.000216 | 0.000250 | +0.000034 | Both models exhibit near-zero calibration error |
 | **Resolution Component** | 0.032512 | **0.064756** | **+0.032244** | UMiKT-v2 achieves nearly **double the resolution** |
-| **Decomposed Brier Score** | 0.209620 | **0.177410** | **−0.032210** | Decomposed Brier matches empirical values |
+| **Decomposed Brier Sum** | 0.209620 | **0.177410** | **−0.032210** | 10-bin partition approximation |
 | **Actual Empirical Brier** | 0.208966 | **0.176429** | **−0.032537** | $\approx 15.6\%$ overall error reduction |
+| *Binning Discretization Residual* | *0.000654* | *0.000981* | — | *Residual between binned sum and empirical Brier* |
 
 ```
                        10-Bin Calibration Table
@@ -214,7 +216,7 @@ Computing this exact decomposition across 10 probability bins reveals:
 ```
 
 **Decomposition Finding:** 
-Both models are well-calibrated (ECE = 0.0128; Reliability $< 0.0003$). Murphy's decomposition mathematically demonstrates that **100% of the Brier score reduction is driven by resolution (+0.0322 higher resolution)**: UMiKT-GAT v2 assigns 1,501 predictions in $[0.9, 1.0]$ with 94.7% empirical accuracy, and 586 predictions in $[0.0, 0.1)$ with 5.8% empirical accuracy, whereas DKT clusters predictions in the uncertain $[0.4, 0.8]$ range.
+Both models are well-calibrated (ECE = 0.0128; Reliability $< 0.0003$). The 10-bin decomposition demonstrates that the Brier score reduction is driven by resolution (+0.0322 higher resolution): UMiKT-GAT v2 assigns 1,501 predictions in $[0.9, 1.0]$ with 94.7% empirical accuracy, and 586 predictions in $[0.0, 0.1)$ with 5.8% empirical accuracy, whereas DKT clusters predictions in the uncertain $[0.4, 0.8]$ range. Small differences between the decomposed sum and empirical Brier score arise from 10-bin discretization.
 
 ---
 
@@ -267,7 +269,7 @@ The 0.8017 AUC achieved by UMiKT-GAT v2 on real data is attributable to the foll
 An audit of `scripts/train_umikt_v2_next_response.py` revealed an important implementation detail in `_load_adj`:
 - The graph loader expected edge dictionary keys `"from"` and `"to"` (`e.get("from", e.get("src", 0))`), whereas `foundational_assist_concept_graph.json` defined edges with keys `"source"` and `"target"`.
 - Consequently, `_load_adj` defaulted to `torch.eye(N_CONCEPTS)` (the identity matrix).
-- **Scientific Implication:** In the saved checkpoint, the GAT layer functioned as a **self-attentive concept-conditioning module** without propagating representations across prerequisite edges.
+- **Scientific Implication:** In the evaluated checkpoint, the GAT layer functioned as a **self-attentive concept-conditioning module** without propagating representations across prerequisite edges.
 - **Hypothesis Status:** The hypothesis that *cross-node prerequisite graph message passing* provides further additive gain over self-attention remains an open question. The observed 0.8017 AUC proves the value of the **SharedSeq concept-conditioned architecture**, while isolating the exact incremental benefit of active prerequisite edge propagation requires a dedicated follow-up graph ablation.
 
 ---
@@ -351,7 +353,7 @@ In synthetic simulations, the ground truth includes an unobservable continuous m
 ### 9.1 Summary Conclusion
 Under the reported learner-disjoint next-response evaluation protocol on `FoundationalASSIST`, UMiKT-GAT v2 achieved a ROC-AUC of 0.8017, compared with 0.7140 for DKT and 0.6974 for BKT. The reported results indicate improved discrimination and a lower Brier score for UMiKT-GAT v2. Both neural models were evaluated on the same 11,700 target interactions according to the repository's alignment audit. 
 
-Learner-level clustered bootstrap analysis confirmed that the performance difference is statistically significant ($95\%\text{ CI: } [+0.0811, +0.0954]$, with zero exceedances in 2,000 resamples). Murphy's Brier score decomposition proves that UMiKT-GAT v2 achieves this gain through higher probability resolution (0.0648 vs. 0.0325) while maintaining low calibration error (ECE = 0.0128). 
+All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference, with a percentile 95% confidence interval of $[+0.0811, +0.0954]$. A 10-bin Brier score decomposition shows that UMiKT-GAT v2 achieves this gain through higher probability resolution (0.0648 vs. 0.0325) while maintaining low calibration error (ECE = 0.0128). 
 
 An implementation audit verified that v2 operated with self-attentive concept conditioning; thus, the observed gain demonstrates the effectiveness of the unified `SharedSeq` concept-conditioned framework. Isolating the independent causal contribution of active cross-node prerequisite diffusion remains a prioritized direction for future research.
 

@@ -1,0 +1,21 @@
+{
+  "n_next_response_predictions": 11700,
+  "accuracy": 0.5899145299145299,
+  "rmse": 0.6006045388721869,
+  "brier": 0.3607258121138723,
+  "roc_auc": 0.6114119678717673,
+  "pr_auc_average_precision": 0.6856912442615501,
+  "ece_10_bins": 0.34475833791443433,
+  "positive_rate": 0.5899145299145299,
+  "best_epoch": 1,
+  "best_validation_auc": 0.6214527438300697,
+  "elapsed_seconds": 237.48,
+  "learner_overlap": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+  },
+  "train_targets_per_epoch": 1000,
+  "train_stride": 3,
+  "difficulty_estimated_from": "training split only"
+}

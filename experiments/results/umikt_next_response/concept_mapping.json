@@ -1,0 +1,4 @@
+{
+  "n_concepts": 7,
+  "mapping": "int(concept_id) % N_CONCEPTS (matches current repository convention)"
+}

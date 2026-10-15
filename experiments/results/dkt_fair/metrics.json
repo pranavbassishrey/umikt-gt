@@ -1,0 +1,38 @@
+{
+  "model": "DKT (LSTM; next-response prediction)",
+  "dataset": "data/foundational_assist",
+  "seed": 42,
+  "device": "cuda",
+  "n_concepts": 7,
+  "best_epoch": 27,
+  "best_validation_auc": 0.7107867064445588,
+  "validation_loss": 0.6106980808575948,
+  "validation": {
+    "n_next_response_predictions": 11700,
+    "accuracy": 0.67,
+    "rmse": 0.45965513005511965,
+    "brier": 0.21128283858598898,
+    "positive_rate": 0.5761538461538461,
+    "roc_auc": 0.7107867064445588,
+    "pr_auc_average_precision": 0.7561097312164513,
+    "ece_10_bins": 0.016841234639923805
+  },
+  "test_loss": 0.6053133018811544,
+  "test": {
+    "n_next_response_predictions": 11700,
+    "accuracy": 0.6712820512820513,
+    "rmse": 0.45712839837210706,
+    "brier": 0.20896637259824782,
+    "positive_rate": 0.5899145299145299,
+    "roc_auc": 0.7140437904618087,
+    "pr_auc_average_precision": 0.769287082991272,
+    "ece_10_bins": 0.012815124348251723
+  },
+  "learner_split_overlap": {
+    "train_val_learner_overlap": 0,
+    "train_test_learner_overlap": 0,
+    "val_test_learner_overlap": 0
+  },
+  "evaluation_protocol": "For each learner, predict response at t+1 from observed interaction at t; never use target response as input.",
+  "note": "Compare with UMiKT-GAT only after both models are evaluated on identical next-response targets and split definitions."
+}

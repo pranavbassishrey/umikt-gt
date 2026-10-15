@@ -5,7 +5,7 @@
 **Dataset:** ASSISTments / FoundationalASSIST (Real Human Student Interactions, Common Core Mathematics, Grades 6–8)  
 **Primary Evaluation:** Strictly Aligned Next-Response Prediction on Disjoint Student Trajectories (11,700 Targets)  
 **Execution Environment:** PyTorch 2.14.0+cu130 | NVIDIA GeForce RTX 3050 Laptop GPU (4 GB VRAM) | Linux x86_64  
-**Reproduction Script:** `scripts/reproduce_all_report_metrics.py` | **Repository Branch:** `main`  
+**Independent Reproduction Script:** `scripts/reproduce_all_report_metrics.py` | **Repository Branch:** `main`  
 
 ---
 
@@ -19,14 +19,14 @@ The primary research inquiry investigated:
 ### The Core Finding:
 Under the reported learner-disjoint next-response evaluation protocol on `FoundationalASSIST`, **UMiKT-GAT v2 achieved a ROC-AUC of 0.8017**, compared with **0.7140 for DKT** and **0.6974 for BKT**. The reported results indicate improved discrimination and a lower Brier score for UMiKT-GAT v2. Both neural models were evaluated on the exact same 11,700 target interactions according to the repository's alignment audit. 
 
-An architectural audit reveals that UMiKT-GAT v2's performance gain is primarily driven by its **chronological shared sequence GRU backbone, dynamic concept-state conditioning, target-specific projection head, and cosine annealing schedule**. Because the evaluated checkpoint operated with identity adjacency in the graph attention layer, the model functioned as a concept-conditioned self-attentive network; the independent causal contribution of active cross-node prerequisite edge propagation remains an open hypothesis to be evaluated through targeted graph ablations.
+These results show that the evaluated shared-sequence, concept-conditioned architecture outperformed the reported baselines on this test set. Controlled ablation experiments are still required to isolate the contributions of individual components, particularly prerequisite-graph message passing.
 
 ### Key Verified Results on Real Data:
 1. **Predictive Performance:** UMiKT-GAT v2 achieved an **ROC-AUC of 0.8017** and **PR-AUC of 0.8508**, exceeding the standard **DKT baseline (ROC-AUC 0.7140, PR-AUC 0.7693)** by **+0.0877 AUC** and **BKT (ROC-AUC 0.6974)** by **+0.1043 AUC**.
-2. **Learner-Clustered Statistical Bootstrap:** To account for intra-student correlation across the 39 sequential predictions per learner, a **learner-level clustered bootstrap** ($B = 2,000$ resamples of 300 test learners with replacement) was conducted. All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference. The percentile 95% confidence interval was **$[+0.0811, +0.0954]$**. No non-positive differences were observed among the replicates. A paired McNemar test confirmed significant differences in paired classification errors at threshold 0.5 ($p = 9.27 \times 10^{-45}$).
-3. **Probabilistic Accuracy & 10-Bin Brier Decomposition:** UMiKT-GAT v2 achieved a **Brier score of 0.1764**, a 15.6% reduction compared to DKT (**0.2090**) and 43.8% reduction compared to BKT (**0.3138**). Both neural models achieved low Expected Calibration Error (**ECE $\approx 0.0128$**); a 10-bin Murphy Brier score decomposition shows that UMiKT-GAT v2's lower Brier score is driven almost entirely by **higher resolution / sharpness (0.0648 vs. 0.0325)** while maintaining near-zero reliability error ($\approx 0.0002$).
+2. **Learner-Clustered Statistical Bootstrap:** To account for intra-student correlation across the 39 sequential predictions per learner, a **learner-level clustered bootstrap** ($B = 2,000$ resamples of 300 test learners with replacement) was conducted. All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference. The percentile 95% confidence interval was **$[+0.0809, +0.0953]$**. No non-positive differences were observed among the replicates. A paired McNemar test confirmed significant differences in paired classification errors at threshold 0.5 ($p = 9.27 \times 10^{-45}$).
+3. **Probabilistic Accuracy & 10-Bin Brier Decomposition:** UMiKT-GAT v2 achieved a **Brier score of 0.1764**, a 15.6% reduction compared to DKT (**0.2090**) and 43.8% reduction compared to BKT (**0.3138**). Both neural models achieved low Expected Calibration Error (**ECE $\approx 0.0128$**). The 10-bin Brier decomposition suggests that the lower Brier score is primarily associated with higher resolution (0.0648 vs. 0.0325), while the reliability components remain small for both models ($\approx 0.0002$).
 4. **Target Alignment Audit:** An exhaustive audit verified row-level concordance between DKT and UMiKT-GAT v2 across all 11,700 targets with zero identifier, concept, or label mismatches.
-5. **Trade-offs & Resource Requirements:** UMiKT-GAT v2 introduces a ~6.6× parameter expansion over DKT (399,617 vs. 60,000 parameters), higher training compute (262.05s vs. 113.87s on GPU) compared to tabular BKT (2.76s on CPU), and loss of BKT's closed-form psychometric parameters.
+5. **Trade-offs & Resource Requirements:** UMiKT-GAT v2 introduces a ~4.8× parameter expansion over DKT (399,617 vs. 82,907 parameters), higher training compute (262.05s vs. 113.87s on GPU) compared to tabular BKT (2.76s on CPU), and loss of BKT's closed-form psychometric parameters.
 
 ---
 
@@ -139,7 +139,7 @@ All metrics below are computed on the 11,700 verified test predictions:
 | Model | ROC-AUC | PR-AUC | Accuracy | RMSE | Brier Score | ECE (10 bins) | Parameters | Training Time | Test Set Latency |
 |---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|
 | **BKT Baseline** | 0.6974 | — | 0.6647 | 0.5602 | 0.3138 | — | **28** | **2.76s** (CPU) | <0.1s |
-| **DKT Baseline (LSTM)** | 0.7140 | 0.7693 | 0.6713 | 0.4571 | 0.2090 | 0.0128 | ~60,000 | 113.87s (GPU) | 1.10s |
+| **DKT Baseline (LSTM)** | 0.7140 | 0.7693 | 0.6713 | 0.4571 | 0.2090 | 0.0128 | 82,907 | 113.87s (GPU) | 1.10s |
 | **UMiKT-GAT v1 (Broken Baseline)** | 0.6114 | 0.6857 | 0.5899 | 0.6006 | 0.3607 | 0.3450 | 385,000 | 480.0s (GPU) | 15.20s |
 | **UMiKT-GAT v2 (Evaluated)** | **0.8017** | **0.8508** | **0.7313** | **0.4200** | **0.1764** | **0.0128** | 399,617 | 262.05s (GPU) | 12.54s |
 
@@ -159,21 +159,21 @@ All metrics below are computed on the 11,700 verified test predictions:
                    BKT         UMiKT-v1        DKT       UMiKT-v2 (Ours)
 ```
 
-### 3.2 Statistical Significance: Interaction vs. Learner-Clustered Bootstrap
+### 3.2 Statistical Bootstrapping: Interaction vs. Learner-Clustered
 
-To evaluate whether the observed AUC advantage is statistically robust, we report both interaction-level and learner-clustered statistical analyses:
+To evaluate whether the observed AUC advantage is statistically robust, we report both interaction-level and learner-clustered bootstrap analyses:
 
 | Statistical Test | Unit of Resampling | Resamples ($B$) | Metric Delta ($\text{v2} - \text{DKT}$) | 95% Confidence Interval | Result Summary |
 |---|---|:---:|:---:|:---:|:---:|
-| **Standard Paired Bootstrap** | 11,700 individual interactions | 2,000 | +0.0877 AUC | $[+0.0797, +0.0956]$ | 2,000 / 2,000 replicates positive |
-| **Learner-Clustered Bootstrap** | **300 test learners (39 targets each)** | **2,000** | **+0.0881 AUC** | **$[+0.0811, +0.0954]$** | **All 2,000 replicates positive** |
-| **DKT Clustered Baseline CI** | 300 test learners | 2,000 | — | $[0.6971, 0.7288]$ | Baseline interval |
-| **UMiKT-v2 Clustered Baseline CI**| 300 test learners | 2,000 | — | $[0.7897, 0.8126]$ | Non-overlapping with DKT |
-| **McNemar's Paired Test** | 11,700 paired binary outcomes (thresh 0.5) | N/A | Discordant: 1598 vs 896 | $\chi^2 = 197.8$ | $p = 9.27 \times 10^{-45}$ |
+| **Standard Paired Bootstrap** | 11,700 individual interactions | 2,000 | +0.0877 AUC | $[+0.0797, +0.0958]$ | 2,000 / 2,000 replicates positive |
+| **Learner-Clustered Bootstrap** | **300 test learners (39 targets each)** | **2,000** | **+0.0879 AUC** | **$[+0.0809, +0.0953]$** | **All 2,000 replicates positive** |
+| **DKT Clustered Baseline CI** | 300 test learners | 2,000 | — | $[0.6985, 0.7286]$ | Baseline interval |
+| **UMiKT-v2 Clustered Baseline CI**| 300 test learners | 2,000 | — | $[0.7911, 0.8125]$ | Non-overlapping with DKT |
+| **McNemar's Paired Test** | 11,700 paired binary outcomes (thresh 0.5) | N/A | Discordant: 1598 vs 896 | $\chi^2 = 197.03$ | $p = 9.27 \times 10^{-45}$ |
 
 **Interpretation:** 
-- Resampling by learner clusters accounts for potential correlation among predictions from the same student. All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference. The percentile 95% confidence interval was **$[+0.0811, +0.0954]$**. No non-positive differences were observed among the replicates.
-- The 95% clustered baseline intervals for DKT ($[0.6971, 0.7288]$) and UMiKT-v2 ($[0.7897, 0.8126]$) are separated by a noticeable margin.
+- Resampling by learner clusters accounts for potential correlation among predictions from the same student. All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference. The percentile 95% confidence interval was **$[+0.0809, +0.0953]$**. No non-positive differences were observed among the replicates.
+- The 95% clustered baseline intervals for DKT ($[0.6985, 0.7286]$) and UMiKT-v2 ($[0.7911, 0.8125]$) are separated by a noticeable margin.
 - McNemar's test confirms a statistically significant difference in paired binary classification errors at threshold 0.5 ($p = 9.27 \times 10^{-45}$); it evaluates discrete classification accuracy rather than the continuous ranking measured by AUC.
 
 ### 3.3 10-Bin Murphy Brier Score Decomposition & Calibration Analysis
@@ -216,7 +216,7 @@ Computing this 10-bin decomposition reveals:
 ```
 
 **Decomposition Finding:** 
-Both models are well-calibrated (ECE = 0.0128; Reliability $< 0.0003$). The 10-bin decomposition demonstrates that the Brier score reduction is driven by resolution (+0.0322 higher resolution): UMiKT-GAT v2 assigns 1,501 predictions in $[0.9, 1.0]$ with 94.7% empirical accuracy, and 586 predictions in $[0.0, 0.1)$ with 5.8% empirical accuracy, whereas DKT clusters predictions in the uncertain $[0.4, 0.8]$ range. Small differences between the decomposed sum and empirical Brier score arise from 10-bin discretization.
+Both models are well-calibrated (ECE = 0.0128; Reliability $< 0.0003$). The 10-bin Brier decomposition suggests that the lower Brier score is primarily associated with higher resolution (0.0648 vs. 0.0325), while the reliability components remain small for both models: UMiKT-GAT v2 assigns 1,501 predictions in $[0.9, 1.0]$ with 94.7% empirical accuracy, and 586 predictions in $[0.0, 0.1)$ with 5.8% empirical accuracy, whereas DKT clusters predictions in the uncertain $[0.4, 0.8]$ range. Small differences between the decomposed sum and empirical Brier score arise from 10-bin discretization.
 
 ---
 
@@ -312,7 +312,7 @@ An honest appraisal indicates key areas where simpler baselines hold practical o
 ```
 
 ### 7.1 Computational Complexity & Parameter Footprint
-- **Parameter Footprint:** UMiKT-GAT v2 has **399,617 parameters**, compared to ~60,000 in DKT and **28 parameters** in BKT (4 parameters $\times 7$ concepts).
+- **Parameter Footprint:** UMiKT-GAT v2 has **399,617 parameters**, compared to **82,907** in DKT and **28 parameters** in BKT (4 parameters $\times 7$ concepts).
 - **Latency & Training Cost:**
   - BKT fits in **2.76 seconds** on CPU.
   - DKT trains in **113.87 seconds** and evaluates 11,700 predictions in 1.10 seconds.
@@ -351,9 +351,9 @@ In synthetic simulations, the ground truth includes an unobservable continuous m
 ## 9. Conclusion & Research Outlook
 
 ### 9.1 Summary Conclusion
-Under the reported learner-disjoint next-response evaluation protocol on `FoundationalASSIST`, UMiKT-GAT v2 achieved a ROC-AUC of 0.8017, compared with 0.7140 for DKT and 0.6974 for BKT. The reported results indicate improved discrimination and a lower Brier score for UMiKT-GAT v2. Both neural models were evaluated on the same 11,700 target interactions according to the repository's alignment audit. 
+Under the reported learner-disjoint next-response evaluation protocol on `FoundationalASSIST`, UMiKT-GAT v2 achieved a ROC-AUC of 0.8017, compared with 0.7140 for DKT and 0.6974 for BKT. These results show that the evaluated shared-sequence, concept-conditioned architecture outperformed the reported baselines on this test set. Controlled ablation experiments are still required to isolate the contributions of individual components, particularly prerequisite-graph message passing.
 
-All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference, with a percentile 95% confidence interval of $[+0.0811, +0.0954]$. A 10-bin Brier score decomposition shows that UMiKT-GAT v2 achieves this gain through higher probability resolution (0.0648 vs. 0.0325) while maintaining low calibration error (ECE = 0.0128). 
+All 2,000 learner-clustered bootstrap replicates produced a positive AUC difference, with a percentile 95% confidence interval of $[+0.0809, +0.0953]$. A 10-bin Brier score decomposition suggests that the lower Brier score is primarily associated with higher resolution (0.0648 vs. 0.0325), while the reliability components remain small for both models ($\approx 0.0002$). 
 
 An implementation audit verified that v2 operated with self-attentive concept conditioning; thus, the observed gain demonstrates the effectiveness of the unified `SharedSeq` concept-conditioned framework. Isolating the independent causal contribution of active cross-node prerequisite diffusion remains a prioritized direction for future research.
 
@@ -364,4 +364,4 @@ An implementation audit verified that v2 operated with self-attentive concept co
 
 ---
 
-*Report compiled from authenticated experimental artifacts in `experiments/results/` and verified across 11,700 aligned test interactions on `FoundationalASSIST`.*
+*Report compiled from authenticated experimental artifacts in `experiments/results/` and independently reproduced via `scripts/reproduce_all_report_metrics.py` across 11,700 aligned test interactions on `FoundationalASSIST`.*

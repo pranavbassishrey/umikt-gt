@@ -1,0 +1,28 @@
+{
+  "verified_identical": true,
+  "n_target_interactions": 11700,
+  "n_unique_learners": 300,
+  "interactions_per_learner": 39,
+  "label_alignment": {
+    "dkt_vs_ground_truth_matches": 11700,
+    "dkt_vs_ground_truth_mismatches": 0,
+    "v2_vs_ground_truth_matches": 11700,
+    "v2_vs_ground_truth_mismatches": 0,
+    "dkt_vs_v2_matches": 11700,
+    "dkt_vs_v2_mismatches": 0
+  },
+  "target_id_alignment": {
+    "all_composite_keys_unique": true,
+    "key_format": "learner_id + '_' + str(interaction_id)",
+    "all_concept_ids_matched": true
+  },
+  "metrics_on_verified_aligned_targets": {
+    "dkt_roc_auc": 0.7140437904618087,
+    "umikt_v2_roc_auc": 0.8017493826813041,
+    "roc_auc_delta": 0.08770559221949548,
+    "dkt_brier_score": 0.20896637259824782,
+    "umikt_v2_brier_score": 0.17642941067135806,
+    "brier_delta": -0.03253696192688976
+  },
+  "conclusion": "Verified with 100% precision that DKT and UMiKT-GAT v2 evaluated on the EXACT SAME 11,700 target interactions with identical learner IDs, interaction IDs, concept IDs, and binary correctness labels."
+}

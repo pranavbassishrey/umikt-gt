@@ -38,6 +38,16 @@
 UMiKT-GAT v2 is statistically significantly better than DKT across all metrics.
 The AUC advantage (+877 bps) has a 95% bootstrap CI that lies entirely above zero.
 
+### Target Interaction Alignment Verification (100% Confirmed)
+
+A rigorous audit was conducted (`scripts/verify_target_alignment.py`, `experiments/results/alignment_verification.json`) verifying that both evaluations used the **exact same target interactions**:
+- **Test Set Population:** 300 test learners, each with 40 sequential interactions.
+- **Target Positions:** Exactly 39 next-response targets per learner (interactions 1 through 39, predicted from interactions 0 through $t-1$), yielding exactly **11,700 targets**.
+- **Composite Key Alignment:** Each target was verified by unique composite key `learner_id + "_" + str(interaction_id)`.
+- **Target Concept Alignment:** 11,700 / 11,700 (100.0%) concept IDs match.
+- **Ground-Truth Label Alignment:** 11,700 / 11,700 (100.0%) binary labels match with 0 mismatches.
+- Both `experiments/results/dkt_fair/test_predictions.csv` and `experiments/results/umikt_v2_next_response/test_predictions.csv` have been enriched with explicit `learner_id`, `interaction_id`, `composite_target_id`, `target_step_in_sequence`, `target_concept_id`, and `target_concept_name` columns.
+
 ### Why v1 Failed / v2 Fixed
 
 | Problem in v1 | Fix in v2 |

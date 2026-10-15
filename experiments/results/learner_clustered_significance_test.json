@@ -1,0 +1,23 @@
+{
+  "method": "Learner-level clustered paired bootstrap (resampling 300 test learners with replacement)",
+  "n_learners": 300,
+  "n_test_predictions": 11700,
+  "resamples_B": 2000,
+  "observed_dkt_auc": 0.7140437904618087,
+  "observed_v2_auc": 0.8017493826813041,
+  "observed_auc_delta": 0.08770559221949548,
+  "clustered_bootstrap_mean_delta": 0.08810442321130915,
+  "clustered_95_ci_delta": [
+    0.08114229018882438,
+    0.095386954954447
+  ],
+  "clustered_p_value": 0.0,
+  "dkt_auc_clustered_95_ci": [
+    0.6970981468090632,
+    0.7287701440602455
+  ],
+  "v2_auc_clustered_95_ci": [
+    0.7897163523773499,
+    0.8126064602598424
+  ]
+}

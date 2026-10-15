@@ -28,6 +28,12 @@ data/layer2_synthetic/synthetic_test.csv
 data/layer2_synthetic/synthetic_metadata.json
 data/layer1_public_kt/assistments09_processed.csv
 data/layer1_public_kt/layer1_metadata.json
+data/foundational_assist/
+
+# ── FoundationalASSIST (cloned dataset repository) ───────────────────────────
+FoundationalASSIST/
+FoundationalASSISST/
+
 
 # ── Experiment logs (large, not needed in repo) ───────────────────────────────
 experiments/results/*/train_log.json

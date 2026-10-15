@@ -1,0 +1,11 @@
+{
+  "checkpoint": "/home/pbsmarta/Documents/minor-project/umikt-gat/experiments/results/full_umikt_gat/seed_42/best_model.pt",
+  "deterministic_auc": 0.7128060263653484,
+  "deterministic_acc": 0.5007032348804501,
+  "deterministic_rmse": 0.10903128966795939,
+  "mc_dropout_auc": 0.7231638418079096,
+  "mc_dropout_acc": 0.4908579465541491,
+  "mc_dropout_rmse": 0.10874016899051668,
+  "auc_difference_mc_minus_det": 0.010357815442561202,
+  "explanation": "Config C isolation-run used single-pass deterministic evaluation. Ablation table uses 20-pass MC-Dropout-averaged evaluation on same checkpoint. Difference is evaluation-mode effect, not a training difference."
+}

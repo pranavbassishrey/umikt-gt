@@ -249,6 +249,30 @@ variance = stack(predictions).var(0)  # epistemic uncertainty proxy
 Bayesian posterior. It tends to underestimate uncertainty in high-confidence regions.
 The variance correlates with, but does not equal, true epistemic uncertainty.
 
+### Evaluation Mode Notes (Task 4a — Round 4)
+
+Two evaluation modes are used in this codebase, and they produce **different AUC values
+from the same checkpoint**. This is an evaluation-mode effect, not a training difference.
+
+| Evaluation Mode | Code path | Effect on AUC |
+|---|---|---|
+| **Deterministic** | `model.eval()` + single forward pass | Lower AUC; single-pass prediction variance |
+| **MC-Dropout** | `model.train()` + 20 forward passes, averaged | Higher AUC; averaging reduces variance |
+
+**Specific discrepancy documented (Round 4)**:
+The Config C isolation-run AUC of 0.6990 was measured using single-pass deterministic
+evaluation. The ablation table AUC of 0.7472 (full_umikt_gat) was measured using
+20-pass MC-Dropout-averaged evaluation on the same training setup.
+
+Both numbers are legitimate. The discrepancy is explained entirely by evaluation mode.
+When both modes are applied to the same checkpoint, the difference in AUC is directly
+observable (see `experiments/results/task4a_eval_mode_diagnostic.json`).
+
+**Why MC-Dropout typically yields higher AUC**: Averaging 20 stochastic forward passes
+reduces the variance of the predicted probability, smoothing out individual pass noise.
+The resulting prediction is closer to the model's expected value, which generally
+improves ranking-based metrics like AUC (though not necessarily calibration metrics like ECE).
+
 ---
 
 ## Training

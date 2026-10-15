@@ -76,6 +76,7 @@ class UMiKTGATModel(nn.Module):
                 learner_state_dim=4,  # [M, MC, U, R]
                 dynamic=self.dynamic_gat,
                 dropout_rate=config.get("gat_dropout", 0.2),
+                graph_path=config.get("graph_path", None),
             )
 
         # ── Fusion ──────────────────────────────────────────────────────────

@@ -1,5 +1,5 @@
-# SYNTHETIC DATA — Baseline Comparison
-model,brier_score,data_note,ece,gt_thresh,mastery_accuracy,mastery_auc,mastery_rmse,mc_accuracy,mc_f1_macro,mean_predictive_variance,pred_bin_counts,pred_thresh,retention_mae,retention_rmse,training_time_sec,val_pred_thresh,variant,variant_display
-BKT,,synthetic,,,0.5853658536585366,0.5645449137418204,0.8278133748265227,,,,"[47, 35]",,,,0.14,0.9998164355077684,,
-DKT,,synthetic,,,0.7195121951219512,0.8030933967876264,0.1417372962363376,,,,"[38, 44]",,,,16.96,0.15985071659088135,,
-Full UMiKT-GAT,0.21746951219512195,synthetic,0.1054878048780488,0.012899999972432852,0.6585365853658537,0.7471743010113028,0.09233107812831418,0.8292682926829268,0.22666666666666666,0.0007343129916812248,"[23, 59]",0.040874872356653214,0.05527822566559402,0.08836986883936696,200.53,,full_umikt_gat,Full UMiKT-GAT
+# SYNTHETIC DATA — Baseline Comparison (Round 4)
+model,brier_score,data_note,ece,gt_thresh,mastery_accuracy,mastery_auc,mastery_rmse,mc_accuracy,mc_f1_macro,mean_predictive_variance,pred_bin_counts,pred_thresh,retention_mae,retention_rmse,seed,training_time_sec,val_pred_thresh,variant,variant_display
+BKT,,synthetic,,,0.5344585091420534,0.397834274952919,0.8142901424002286,,,,"[381, 330]",,,,,1.91,0.9765748655949381,,
+DKT,,synthetic,,,0.5063291139240507,0.7904896421845574,0.12407797463057663,,,,"[359, 352]",,,,,33.31,0.17029252648353577,,
+Full UMiKT-GAT,0.36510548523206754,synthetic,0.3358649789029535,0.5,0.5260196905766527,0.7387005649717514,0.10889219107761829,0.7285513361462729,0.12042310821806347,0.000962097166866161,"[373, 338]",0.07123633474111557,0.07577776171919269,0.10450456869209654,42,222.71,,full_umikt_gat,Full UMiKT-GAT

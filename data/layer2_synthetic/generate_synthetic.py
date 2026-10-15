@@ -398,20 +398,60 @@ def generate_dataset(
     return out_path
 
 
+def count_active_test_states(test_path: Path) -> int:
+    """
+    Count the number of active concept-states in the test split.
+
+    An active concept-state is (learner, concept_id) pair where the learner
+    has at least one interaction with that concept in the test split.
+    This is the unit of evaluation (n=82 on old 50-learner test set).
+    """
+    seen = set()
+    import csv as _csv
+    with open(test_path, newline="") as f:
+        for line in f:
+            if line.startswith("#"):
+                continue
+            break  # consumed the first non-comment line (header)
+        # reopen and re-read properly
+    import io
+    lines = []
+    with open(test_path, encoding="utf-8") as f:
+        for line in f:
+            if not line.startswith("#"):
+                lines.append(line)
+    reader = _csv.DictReader(io.StringIO("".join(lines)))
+    for row in reader:
+        try:
+            seen.add((row["learner_id"], int(row["concept_id"])))
+        except (KeyError, ValueError):
+            continue
+    return len(seen)
+
+
 def main():
-    """Generate train, val, and test splits for the synthetic dataset."""
+    """Generate train, val, and test splits for the synthetic dataset.
+
+    Round 4 scaling:
+      - Train: 200 → 3,000 learners  (×15 population increase)
+      - Val:    50 →   450 learners  (15% of train, same ratio as spec)
+      - Test:   50 →   450 learners  (15% of train)
+    All generator parameters (learning rates, forgetting rates, Markov chain,
+    misconception affinities, concept difficulty) are UNCHANGED from Round 1.
+    Only the population size changes.
+    """
     base_dir = Path(__file__).parent
     output_dir = base_dir
 
     print("=" * 60)
-    print("UMiKT-GAT SYNTHETIC DATA GENERATOR")
+    print("UMiKT-GAT SYNTHETIC DATA GENERATOR  (Round 4 — 15x scale)")
     print("ALL DATA GENERATED HERE IS SYNTHETIC.")
     print("=" * 60)
 
-    # Train: 200 learners × 30 interactions = 6,000 rows
-    print("\nGenerating training split (synthetic)...")
+    # Train: 3,000 learners × 30 interactions = 90,000 rows
+    print("\nGenerating training split (synthetic, 3000 learners)...")
     train_path = generate_dataset(
-        n_learners=200,
+        n_learners=3000,
         n_interactions_per_learner=30,
         seed=42,
         output_dir=output_dir,
@@ -419,10 +459,10 @@ def main():
     )
     print(f"  → Written: {train_path}")
 
-    # Val: 50 learners × 30 interactions = 1,500 rows
-    print("\nGenerating validation split (synthetic)...")
+    # Val: 450 learners × 30 interactions = 13,500 rows  (~15% of train)
+    print("\nGenerating validation split (synthetic, 450 learners)...")
     val_path = generate_dataset(
-        n_learners=50,
+        n_learners=450,
         n_interactions_per_learner=30,
         seed=123,
         output_dir=output_dir,
@@ -430,10 +470,10 @@ def main():
     )
     print(f"  → Written: {val_path}")
 
-    # Test: 50 learners × 30 interactions = 1,500 rows
-    print("\nGenerating test split (synthetic)...")
+    # Test: 450 learners × 30 interactions = 13,500 rows  (~15% of train)
+    print("\nGenerating test split (synthetic, 450 learners)...")
     test_path = generate_dataset(
-        n_learners=50,
+        n_learners=450,
         n_interactions_per_learner=30,
         seed=999,
         output_dir=output_dir,
@@ -441,15 +481,22 @@ def main():
     )
     print(f"  → Written: {test_path}")
 
+    # Count active test concept-states (the quantity that was 82 before)
+    active_states = count_active_test_states(test_path)
+    print(f"\n  Active test concept-states (learner×concept pairs): {active_states}")
+    print(f"  (Was 82 on the old 50-learner test set)")
+
     # Write metadata JSON
     metadata = {
         "description": "(SYNTHETIC) UMiKT-GAT synthetic training data",
         "warning": "THIS IS SYNTHETIC DATA. Do not present as real human subject data.",
+        "round": "Round 4 — 15x population scale",
         "splits": {
-            "train": {"n_learners": 200, "n_interactions": 30, "seed": 42, "total_rows": 6000},
-            "val":   {"n_learners": 50,  "n_interactions": 30, "seed": 123, "total_rows": 1500},
-            "test":  {"n_learners": 50,  "n_interactions": 30, "seed": 999, "total_rows": 1500},
+            "train": {"n_learners": 3000, "n_interactions": 30, "seed": 42,  "total_rows": 90000},
+            "val":   {"n_learners": 450,  "n_interactions": 30, "seed": 123, "total_rows": 13500},
+            "test":  {"n_learners": 450,  "n_interactions": 30, "seed": 999, "total_rows": 13500},
         },
+        "active_test_concept_states": active_states,
         "n_concepts": N_CONCEPTS,
         "concept_names": CONCEPT_NAMES,
         "misconception_classes": MISCONCEPTION_CLASSES,
@@ -462,11 +509,11 @@ def main():
             "gt_misconception_severity", "gt_forgetting_rate", "gt_retention"
         ],
         "simulation_assumptions": [
-            "Mastery: logistic growth with individual learning rates",
-            "Misconceptions: first-order Markov chain over taxonomy",
-            "Forgetting: exponential decay with concept-specific lambda",
-            "Correctness: noisy Bernoulli sample from (mastery - mc_penalty)",
-            "Response time: log-normal conditioned on difficulty"
+            "Mastery: logistic growth with individual learning rates (unchanged from Round 1)",
+            "Misconceptions: first-order Markov chain over taxonomy (unchanged)",
+            "Forgetting: exponential decay with concept-specific lambda (unchanged)",
+            "Correctness: noisy Bernoulli sample from (mastery - mc_penalty) (unchanged)",
+            "Response time: log-normal conditioned on difficulty (unchanged)"
         ]
     }
     with open(output_dir / "synthetic_metadata.json", "w") as f:

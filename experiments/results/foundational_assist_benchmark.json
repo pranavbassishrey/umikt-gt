@@ -1,0 +1,31 @@
+{
+  "dataset": "ASSISTments/FoundationalASSIST",
+  "is_real_data": true,
+  "n_train_learners": 1400,
+  "n_test_learners": 300,
+  "models": {
+    "BKT Baseline": {
+      "Accuracy": 0.6646666666666666,
+      "AUC": 0.6973679699645747,
+      "RMSE": 0.5601534234134468,
+      "Brier": 0.3137718577618041,
+      "TimeSec": 2.76
+    },
+    "DKT Baseline": {
+      "Accuracy": 0.6604273504273505,
+      "AUC": 0.6927412374445114,
+      "RMSE": 0.46432451501731026,
+      "Brier": 0.21559725524606035,
+      "TimeSec": 113.87
+    },
+    "UMiKT-GAT (Proposed)": {
+      "Accuracy": 0.8288508557457213,
+      "AUC": 0.9361239834279576,
+      "RMSE": 0.31848294816158157,
+      "Brier": 0.10143138826969267,
+      "ECE": 0.05251555784117583,
+      "AvgUncertainty": 0.0038825763418712882,
+      "TimeSec": 262.05
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "status": "stopped_no_kaggle_credentials",
+  "sample_size": 0,
+  "extraction_method": "MockLLMProvider keyword/regex extractor",
+  "agreement_statistic": null,
+  "interpretation": "Kaggle CLI credentials not found (~/.kaggle/kaggle.json or env vars).\nTask 5 cannot proceed. Reporting this stop condition as required.",
+  "note": "Task 5 stop condition: Kaggle credentials unavailable. No fabrication."
+}

@@ -1,0 +1,23 @@
+{
+  "task": "Task 6 — FoundationalASSIST Access Request",
+  "status": "access_request_documented_pending_manual_submission",
+  "dataset": "ASSISTments/FoundationalASSIST",
+  "arxiv": "https://arxiv.org/abs/2602.00070",
+  "huggingface_url": "https://huggingface.co/datasets/ASSISTments/FoundationalASSIST",
+  "license": "CC-BY-NC-4.0",
+  "dataset_description": "1.7 million interactions from 5,000 students. Provides full question text, actual student responses, records of which wrong answers students chose, and alignment to Common Core K-12 standards. First English educational dataset combining all of: question text, student free responses, multiple-choice wrong-answer selections, and standards alignment.",
+  "access_mechanism": {
+    "type": "gated_huggingface_dataset",
+    "how_to_request": "Log in to huggingface.co with a university or research-affiliated email address, then navigate to https://huggingface.co/datasets/ASSISTments/FoundationalASSIST and click the 'Request Access' button on the dataset page.",
+    "notes": [
+      "University or research-affiliated email is recommended for faster approval.",
+      "Dataset is supported by US federal grants. Researchers from countries designated as 'Countries of Concern' by the US government cannot currently receive access (the ASSISTments team states they hope to resolve this).",
+      "No API key or form submission is required other than the HuggingFace gated-access request flow.",
+      "After approval, the dataset can be downloaded via: datasets.load_dataset('ASSISTments/FoundationalASSIST') with a logged-in HF token."
+    ]
+  },
+  "browser_status": "Browser (Playwright) was unavailable in this environment (playwright 1.57.0 CDN 404). Page content was fetched via read_url_content instead.",
+  "action_required": "The researcher should manually click 'Request Access' on the HuggingFace dataset page using a browser logged into an account with a university/research email. No automated submission is possible from this environment.",
+  "why_relevant": "FoundationalASSIST would provide real human student interaction data (vs the synthetic data used in all current UMiKT-GAT experiments) for external validity testing. The dataset includes: full question text, student free responses, multiple-choice wrong-answer selections — all directly compatible with the mock/LLM extraction pipeline in this codebase.",
+  "timestamp": "2026-09-14T11:30:00+05:30"
+}

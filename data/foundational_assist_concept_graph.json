@@ -1,0 +1,125 @@
+{
+  "_meta": {
+    "description": "Prerequisite concept graph for Middle School Mathematics (Common Core 6-8) aligned with ASSISTments / FoundationalASSIST dataset.",
+    "domain": "Middle School Mathematics (Common Core 6th-8th Grade)",
+    "version": "1.0",
+    "node_count": 7,
+    "edge_count": 10
+  },
+  "nodes": [
+    {
+      "concept_id": 0,
+      "name": "Arithmetic & Operations",
+      "domain_code": "ARITH",
+      "description": "Elementary and foundational operations with fractions, decimals, and whole numbers (OA, NBT, NF, MD)."
+    },
+    {
+      "concept_id": 1,
+      "name": "The Number System",
+      "domain_code": "NS",
+      "description": "Rational and irrational numbers, negative integers, dividing fractions, and number line reasoning (6-8.NS)."
+    },
+    {
+      "concept_id": 2,
+      "name": "Ratios & Proportions",
+      "domain_code": "RP",
+      "description": "Ratio concepts, unit rates, percentages, and proportional relationship modeling (6-7.RP)."
+    },
+    {
+      "concept_id": 3,
+      "name": "Expressions & Equations",
+      "domain_code": "EE",
+      "description": "Writing and evaluating algebraic expressions, solving one- and two-step linear equations and inequalities (6-8.EE)."
+    },
+    {
+      "concept_id": 4,
+      "name": "Functions",
+      "domain_code": "F",
+      "description": "Understanding function definitions, input-output mapping, and linear models (8.F)."
+    },
+    {
+      "concept_id": 5,
+      "name": "Geometry",
+      "domain_code": "G",
+      "description": "Area, surface area, volume, scale drawings, circles, angle relationships, and the Pythagorean theorem (6-8.G)."
+    },
+    {
+      "concept_id": 6,
+      "name": "Statistics & Probability",
+      "domain_code": "SP",
+      "description": "Statistical variability, distributions, random sampling, and probability models (6-8.SP)."
+    }
+  ],
+  "edges": [
+    {
+      "source": 0,
+      "target": 1,
+      "dependency_weight": 0.90,
+      "prerequisite_type": "foundational",
+      "justification": "Arithmetic operations are necessary for extending the number system to negative and rational numbers."
+    },
+    {
+      "source": 0,
+      "target": 2,
+      "dependency_weight": 0.75,
+      "prerequisite_type": "foundational",
+      "justification": "Multiplication, division, and fractions are foundational to calculating rates and ratios."
+    },
+    {
+      "source": 1,
+      "target": 2,
+      "dependency_weight": 0.85,
+      "prerequisite_type": "foundational",
+      "justification": "Rational number operations directly underpin unit rates and proportional comparisons."
+    },
+    {
+      "source": 1,
+      "target": 3,
+      "dependency_weight": 0.85,
+      "prerequisite_type": "foundational",
+      "justification": "Evaluating algebraic expressions requires operations on real and signed numbers."
+    },
+    {
+      "source": 2,
+      "target": 3,
+      "dependency_weight": 0.80,
+      "prerequisite_type": "foundational",
+      "justification": "Proportional reasoning (y = kx) forms the conceptual bridge to linear algebraic equations."
+    },
+    {
+      "source": 3,
+      "target": 4,
+      "dependency_weight": 0.90,
+      "prerequisite_type": "foundational",
+      "justification": "Functions formalize input-output relations from algebraic equations."
+    },
+    {
+      "source": 3,
+      "target": 5,
+      "dependency_weight": 0.75,
+      "prerequisite_type": "supportive",
+      "justification": "Geometric formulas (area, volume, angle sums) require solving algebraic equations."
+    },
+    {
+      "source": 4,
+      "target": 5,
+      "dependency_weight": 0.60,
+      "prerequisite_type": "supportive",
+      "justification": "Linear functions connect directly to coordinate geometry and slope."
+    },
+    {
+      "source": 1,
+      "target": 6,
+      "dependency_weight": 0.65,
+      "prerequisite_type": "supportive",
+      "justification": "Calculating statistical measures of center and spread requires signed number arithmetic."
+    },
+    {
+      "source": 2,
+      "target": 6,
+      "dependency_weight": 0.70,
+      "prerequisite_type": "foundational",
+      "justification": "Probability values are defined as ratios and proportions between 0 and 1."
+    }
+  ]
+}

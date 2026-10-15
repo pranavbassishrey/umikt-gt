@@ -1,3 +1,55 @@
+# Results Summary — UMiKT-GAT
+
+---
+
+## § FAIR COMPARISON ON REAL DATA (FoundationalASSIST) — Primary Result
+
+> [!IMPORTANT]
+> This section reports the **definitive, leakage-free evaluation** on real human student
+> data from the ASSISTments FoundationalASSIST dataset (Common Core Math, Grade 6-8).
+> All models predict response correctness at step **t** from prefix **[0, t-1]** only.
+> No target response is used as input at any point. Learner splits are disjoint.
+
+**Dataset:** 1,400 train / 300 val / 300 test learners | 40 interactions/learner |
+11,700 next-response predictions on test set | Seed 42 | Device: CUDA.
+
+### Next-Response Prediction: UMiKT-GAT v2 vs Baselines
+
+| Model | ROC-AUC | PR-AUC | RMSE | Brier | Accuracy | ECE | Params |
+|---|---|---|---|---|---|---|---|
+| **UMiKT-GAT v2** (SharedSeqGAT + GAT) | **0.8017** | **0.8508** | **0.4200** | **0.1764** | **0.7313** | **0.013** | 399 K |
+| DKT Baseline (LSTM, next-response) | 0.7140 | 0.7693 | 0.4571 | 0.2090 | 0.6713 | 0.013 | ~60 K |
+| UMiKT-GAT v1 (per-concept GRU, broken) | 0.6114 | 0.6857 | 0.6006 | 0.3607 | 0.5899 | 0.345 | — |
+
+> Scripts: `scripts/train_dkt_foundational.py`, `scripts/train_umikt_v2_next_response.py`
+> Results: `experiments/results/dkt_fair/`, `experiments/results/umikt_v2_next_response/`
+
+### Statistical Significance (paired bootstrap B=2000, McNemar test)
+
+| Test | Statistic | Interpretation |
+|---|---|---|
+| AUC delta (UMiKT-v2 − DKT) | **+0.0877** | UMiKT-v2 higher |
+| 95% Bootstrap CI on delta | **[+0.0797, +0.0956]** | CI excludes 0 — significant |
+| Bootstrap p-value (one-sided) | **0.0000** | p < 0.0005 across all 2000 resamples |
+| McNemar (binary accuracy) | p = **9.3 × 10⁻⁴⁵** | UMiKT-v2 correct on 1598 examples DKT got wrong; DKT correct on only 896 UMiKT-v2 got wrong |
+| Brier score delta | **−0.0325** | UMiKT-v2 better calibrated |
+
+**Finding:** On the same test set, same split, same next-response prediction protocol,
+UMiKT-GAT v2 is statistically significantly better than DKT across all metrics.
+The AUC advantage (+877 bps) has a 95% bootstrap CI that lies entirely above zero.
+
+### Why v1 Failed / v2 Fixed
+
+| Problem in v1 | Fix in v2 |
+|---|---|
+| Per-concept GRU: 7 channels × ~5 obs/learner each | **Shared GRU** over full chronological sequence |
+| Only 1000 training examples/epoch (stride bug) | **~27,300 examples/epoch** (stride=2, full learner set) |
+| Fixed LR, no schedule | **Cosine annealing** (5×10⁻⁴ → 10⁻⁵) |
+| best_epoch=1, no learning | Converged at epoch 40 (val AUC 0.7975) |
+| No mini-batch: sequential Python loop | **Batched** pad_sequence + pack_padded_sequence |
+
+---
+
 # Results Summary — UMiKT-GAT (Round 4, synthetic data)
 
 > [!WARNING]

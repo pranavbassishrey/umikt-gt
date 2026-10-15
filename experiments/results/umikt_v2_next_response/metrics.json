@@ -1,0 +1,21 @@
+{
+  "n_next_response_predictions": 11700,
+  "accuracy": 0.7312820512820513,
+  "rmse": 0.42003500545603195,
+  "brier": 0.1764294058084488,
+  "roc_auc": 0.8017493826813041,
+  "pr_auc_average_precision": 0.8508214212520679,
+  "ece_10_bins": 0.01276508167003974,
+  "positive_rate": 0.5899145007133484,
+  "best_epoch": 40,
+  "best_validation_auc": 0.7974726386393647,
+  "elapsed_seconds": 12.54,
+  "n_params": 399617,
+  "learner_overlap": {
+    "train_val": 0,
+    "train_test": 0,
+    "val_test": 0
+  },
+  "model": "UMiKT-GAT v2 (SharedSeqGAT: batched GRU + GAT concept context)",
+  "evaluation_protocol": "Predict correctness at position t from observed interactions [0,t-1]. Identical protocol to DKT baseline (experiments/results/dkt_fair/metrics.json)."
+}

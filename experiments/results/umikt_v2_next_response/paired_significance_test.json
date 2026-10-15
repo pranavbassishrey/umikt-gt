@@ -1,0 +1,17 @@
+{
+  "n_test_predictions": 11700,
+  "dkt_auc": 0.7140437904618087,
+  "umikt_v2_auc": 0.8017493826813041,
+  "auc_delta": 0.08770559221949548,
+  "bootstrap_95ci": [
+    0.07973338432734739,
+    0.09556616755302952
+  ],
+  "bootstrap_p_value_one_sided": 0.0,
+  "dkt_brier": 0.20896637259824782,
+  "umikt_v2_brier": 0.17642941067135806,
+  "brier_delta": -0.03253696192688976,
+  "mcnemar_n01_dkt_wrong_umikt_right": 1598,
+  "mcnemar_n10_dkt_right_umikt_wrong": 896,
+  "mcnemar_p_value": 9.273854784138615e-45
+}

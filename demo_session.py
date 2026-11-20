@@ -43,7 +43,7 @@ def main():
 
     checkpoint = Path("experiments/results/full_umikt_gat/best_model.pt")
     if checkpoint.exists():
-        model.load_state_dict(torch.load(checkpoint, map_location=device))
+        model.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=False), strict=False)
         print(f"Loaded checkpoint: {checkpoint}")
     else:
         print("[WARNING] No trained checkpoint found. Using random weights.")

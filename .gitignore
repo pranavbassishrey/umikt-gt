@@ -71,3 +71,11 @@ htmlcov/
 # ── Environment / secrets ─────────────────────────────────────────────────────
 .env
 *.key
+
+# ── Video generation & media artifacts ─────────────────────────────────────────
+build_video/
+*.mp4
+*.m4a
+*.mp3
+scripts/generate_*_video.py
+

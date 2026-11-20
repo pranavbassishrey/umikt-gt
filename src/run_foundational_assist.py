@@ -223,7 +223,9 @@ def run_umikt_gat(train_by_learner, test_by_learner, graph_path: Path, n_epochs:
             print(f"    Epoch [{epoch+1:02d}/{n_epochs:02d}] - Loss: {avg_loss:.4f}")
 
     # Evaluation with MC-Dropout (10 passes for uncertainty estimation)
-    model.train()  # Keep dropout active for MC-Dropout
+    from src.models.mc_dropout_wrapper import MCDropoutWrapper
+    mc_wrapper = MCDropoutWrapper(model, n_samples=10, device=str(device))
+    mc_wrapper.enable_mc_dropout()
     all_preds = []
     all_targets = []
     all_uncertainties = []

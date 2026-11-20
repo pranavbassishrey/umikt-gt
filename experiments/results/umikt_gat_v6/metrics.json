@@ -1,0 +1,13 @@
+{
+  "model_name": "UMiKT-GAT v6 (Pure Neural GAT + Recurrent Memory + 2PL IRT)",
+  "paper_model": true,
+  "zero_leakage": true,
+  "causal": true,
+  "n_targets": 11700,
+  "ROC_AUC": 0.7966608744660706,
+  "PR_AUC": 0.8439320788835092,
+  "Accuracy": 0.7287179487179487,
+  "RMSE": 0.42345457711218365,
+  "Brier": 0.1793137788772583,
+  "ECE": 0.014978919254663657
+}

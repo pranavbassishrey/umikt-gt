@@ -24,15 +24,21 @@ Config-driven: all architecture choices (fusion order, dynamic GAT,
 n_heads, dropout_rate, etc.) are set via the config dict.
 """
 
+import math
+import json
+from pathlib import Path
 import torch
 import torch.nn as nn
 from torch import Tensor
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 from .gru_encoder import GRUEncoder
 from .gat_layer import MultiHeadGAT
 from .fusion import FusionLayer
 from .prediction_heads import MasteryHead, MisconceptionHead, RetentionHead
 from ..features.feature_builder import INPUT_DIM, N_CONCEPTS
+
+INTERACTION_VOCAB = 14  # 7 concepts * 2 binary outcomes
 
 
 class UMiKTGATModel(nn.Module):
@@ -268,3 +274,159 @@ def make_ablation_config(variant: str, base_config: dict | None = None) -> dict:
         })
 
     return cfg
+
+
+class SharedSeqGAT(nn.Module):
+    """
+    UMiKT-GAT v2: Batched shared-sequence GRU + per-step causal GAT concept context.
+
+    GRU input: interaction embedding (concept, answer) → H
+    GAT input: concept-frequency statistics built causally from prefix → H per concept node
+    Output: for each step t, sigmoid(MLP(gru_h_t, gat_node[target_c_t], concept_emb))
+    """
+
+    def __init__(self, H: int = 64, n_heads: int = 4, dropout: float = 0.2,
+                 graph_path: str = "data/foundational_assist_concept_graph.json",
+                 gru_layers: int = 2):
+        super().__init__()
+        self.H = H
+        self.n_heads = n_heads
+        self.head_dim = H // n_heads
+
+        # +1 for padding index 0
+        self.embed = nn.Embedding(INTERACTION_VOCAB + 2, H, padding_idx=0)
+        self.gru = nn.GRU(H, H, num_layers=gru_layers, batch_first=True,
+                          dropout=dropout if gru_layers > 1 else 0.0)
+        self.gru_drop = nn.Dropout(dropout)
+        self.gru_norm = nn.LayerNorm(H)
+
+        # Concept-state encoder: [mastery_proxy, uncertainty, difficulty] → H
+        self.state_proj = nn.Linear(3, H)
+        self.state_norm = nn.LayerNorm(H)
+
+        # GAT
+        self.gat_q = nn.Linear(H, H, bias=False)
+        self.gat_k = nn.Linear(H, H, bias=False)
+        self.gat_v = nn.Linear(H, H, bias=False)
+        self.gat_out = nn.Linear(H, H)
+        self.gat_norm = nn.LayerNorm(H)
+
+        adj = self._load_adj(graph_path)
+        self.register_buffer("adj", adj)
+
+        self.concept_emb = nn.Embedding(N_CONCEPTS, H)
+
+        # Prediction: concat(gru_h, gat_node, concept_emb) → 1
+        self.head = nn.Sequential(
+            nn.Linear(H * 3, H * 2), nn.GELU(), nn.Dropout(dropout),
+            nn.Linear(H * 2, H), nn.GELU(), nn.Dropout(dropout * 0.5),
+            nn.Linear(H, 1), nn.Sigmoid(),
+        )
+
+    def _load_adj(self, graph_path: str) -> torch.Tensor:
+        adj = torch.eye(N_CONCEPTS)
+        if graph_path and Path(graph_path).exists():
+            try:
+                with open(graph_path) as f:
+                    g = json.load(f)
+                for e in g.get("edges", []):
+                    src = int(e.get("source", e.get("from", e.get("src", 0)))) % N_CONCEPTS
+                    dst = int(e.get("target", e.get("to", e.get("dst", 0)))) % N_CONCEPTS
+                    adj[src, dst] = 1.0
+                    adj[dst, src] = 1.0
+            except Exception:
+                pass
+        return adj / adj.sum(dim=1, keepdim=True).clamp(min=1)
+
+    def _gat_pass(self, node_feats: torch.Tensor) -> torch.Tensor:
+        """node_feats: [B, N, H] or [N, H]. Returns same shape."""
+        batched = node_feats.dim() == 3
+        if not batched:
+            node_feats = node_feats.unsqueeze(0)
+        B, N, H = node_feats.shape
+        d = self.head_dim
+        nh = self.n_heads
+
+        q = self.gat_q(node_feats).view(B, N, nh, d).permute(0, 2, 1, 3)  # [B,nh,N,d]
+        k = self.gat_k(node_feats).view(B, N, nh, d).permute(0, 2, 1, 3)
+        v = self.gat_v(node_feats).view(B, N, nh, d).permute(0, 2, 1, 3)
+
+        scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(d)  # [B,nh,N,N]
+        adj_mask = (self.adj < 1e-6).unsqueeze(0).unsqueeze(0)         # [1,1,N,N]
+        scores = scores.masked_fill(adj_mask, float("-inf"))
+        attn = torch.softmax(scores, dim=-1)
+        attn = torch.nan_to_num(attn, nan=0.0)
+
+        out = torch.matmul(attn, v)  # [B,nh,N,d]
+        out = out.permute(0, 2, 1, 3).reshape(B, N, H)
+        result = self.gat_norm(node_feats + self.gat_out(out))
+        return result.squeeze(0) if not batched else result
+
+    def build_concept_states(self, input_ids: torch.Tensor,
+                             diff: torch.Tensor) -> torch.Tensor:
+        """
+        Build concept-state node features for GAT strictly causally.
+        At each step t in [0, T-1], mastery proxy and uncertainty are computed
+        ONLY using interactions up to step t (cumulative prefix, no future peeking).
+
+        input_ids: [B, T] (1-indexed interaction IDs, 0=pad)
+        diff: [B, N_CONCEPTS] concept difficulty estimates
+        Returns: [B, T, N_CONCEPTS, H]
+        """
+        B, T = input_ids.shape
+        nonpad = (input_ids > 0)
+        ids_shifted = (input_ids - 1).clamp(min=0)
+        concepts_in = ids_shifted % N_CONCEPTS           # [B, T]
+        answers_in = (ids_shifted // N_CONCEPTS).float() # [B, T]
+
+        c_oh = torch.zeros(B, T, N_CONCEPTS, device=input_ids.device)
+        c_oh.scatter_(2, concepts_in.unsqueeze(2), 1.0)    # [B, T, N]
+        valid = nonpad.float().unsqueeze(2)                 # [B, T, 1]
+
+        answers_c = c_oh * answers_in.unsqueeze(2) * valid # [B, T, N]
+        counts_c = c_oh * valid                            # [B, T, N]
+
+        cum_answers = torch.cumsum(answers_c, dim=1)        # [B, T, N]
+        cum_counts = torch.cumsum(counts_c, dim=1)          # [B, T, N]
+
+        mastery_proxy = cum_answers / (cum_counts + 1e-6)   # [B, T, N]
+        uncertainty = 1.0 / torch.sqrt(cum_counts + 1.0)   # [B, T, N]
+        diff_exp = diff.unsqueeze(1).expand(B, T, N_CONCEPTS) # [B, T, N]
+
+        states = torch.stack([mastery_proxy, uncertainty, diff_exp], dim=3)
+        node_feats = self.state_norm(self.state_proj(states)) # [B, T, N, H]
+
+        gat_res = self._gat_pass(node_feats.view(B * T, N_CONCEPTS, self.H)) # [B*T, N, H]
+        return gat_res.view(B, T, N_CONCEPTS, self.H)                         # [B, T, N, H]
+
+    def forward(self, input_ids: torch.Tensor, target_c: torch.Tensor,
+                diff: torch.Tensor, lengths: torch.Tensor) -> torch.Tensor:
+        """
+        input_ids: [B, T] padded interaction IDs (1-indexed)
+        target_c:  [B, T] target concept at each step
+        diff:      [B, N_CONCEPTS]
+        lengths:   [B] actual sequence lengths
+        Returns:   [B, T] predicted P(correct) (unmasked)
+        """
+        B, T = input_ids.shape
+
+        emb = self.embed(input_ids)  # [B, T, H]
+        packed = pack_padded_sequence(emb, lengths.cpu(), batch_first=True, enforce_sorted=False)
+        gru_out, _ = self.gru(packed)
+        gru_out, _ = pad_packed_sequence(gru_out, batch_first=True, total_length=T)  # [B, T, H]
+        gru_h = self.gru_norm(self.gru_drop(gru_out))
+
+        node_feats = self.build_concept_states(input_ids, diff)
+
+        tc_clamped = target_c.clamp(0, N_CONCEPTS - 1)
+        tc_idx = tc_clamped.unsqueeze(2).unsqueeze(3).expand(B, T, 1, self.H)
+        gat_node = node_feats.gather(2, tc_idx).squeeze(2)      # [B, T, H]
+
+        c_emb = self.concept_emb(tc_clamped)                    # [B, T, H]
+
+        combined = torch.cat([gru_h, gat_node, c_emb], dim=2)  # [B, T, 3H]
+        return self.head(combined).squeeze(2)                    # [B, T]
+
+
+# Canonical alias for UMiKT-GAT v2
+UMiKTGATv2 = SharedSeqGAT

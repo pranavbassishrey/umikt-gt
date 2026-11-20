@@ -31,8 +31,11 @@ from scipy.stats import chi2
 ROOT = Path(__file__).resolve().parent.parent
 DKT_PREDS = ROOT / "experiments" / "results" / "dkt_fair" / "test_predictions.csv"
 V2_PREDS = ROOT / "experiments" / "results" / "umikt_v2_next_response" / "test_predictions.csv"
+CAUSAL_PREDS = ROOT / "experiments" / "results" / "umikt_v2_causal" / "test_predictions.csv"
+SOTA_PREDS = ROOT / "experiments" / "results" / "umikt_v2_sota" / "test_predictions.csv"
 DKT_CKPT = ROOT / "experiments" / "results" / "dkt_fair" / "dkt_best.pt"
 V2_CKPT = ROOT / "experiments" / "results" / "umikt_v2_next_response" / "umikt_v2_best.pt"
+CAUSAL_CKPT = ROOT / "experiments" / "results" / "umikt_v2_causal" / "umikt_v2_best.pt"
 BKT_BENCH = ROOT / "experiments" / "results" / "foundational_assist_benchmark.json"
 
 
@@ -52,7 +55,14 @@ def main():
     assert (dkt["composite_target_id"] == v2["composite_target_id"]).all(), "Target ID mismatch"
     assert (dkt["y_true"] == v2["y_true"]).all(), "Ground truth label mismatch"
     assert (dkt["target_concept_id"] == v2["target_concept_id"]).all(), "Concept ID mismatch"
-    print("  -> Passed: Exactly 11,700 targets, 300 learners (39 each), 100% aligned IDs and labels.")
+    if SOTA_PREDS.exists():
+        sota = pd.read_csv(SOTA_PREDS)
+        assert len(sota) == 11700, f"Expected 11,700 SOTA predictions, got {len(sota)}"
+        assert (sota["composite_target_id"] == dkt["composite_target_id"]).all(), "SOTA target mismatch"
+        assert (sota["y_true"] == dkt["y_true"]).all(), "SOTA label mismatch"
+        print("  -> Passed: Exactly 11,700 targets, 300 learners (39 each), 100% aligned IDs and labels across DKT, v2, and SOTA.")
+    else:
+        print("  -> Passed: Exactly 11,700 targets, 300 learners (39 each), 100% aligned IDs and labels.")
 
     # 2. Checkpoint Parameter Counts
     print("\n[2] Model Parameter Count Verification (from PyTorch checkpoints)")
@@ -99,6 +109,27 @@ def main():
     print(f"  DKT Baseline:     AUC={dkt_auc:.4f}  PR-AUC={dkt_prauc:.4f}  Acc={dkt_acc:.4f}  RMSE={dkt_rmse:.4f}  Brier={dkt_brier:.4f}")
     print(f"  UMiKT-GAT v2:     AUC={v2_auc:.4f}  PR-AUC={v2_prauc:.4f}  Acc={v2_acc:.4f}  RMSE={v2_rmse:.4f}  Brier={v2_brier:.4f}")
     print(f"  Observed Deltas:  AUC={v2_auc - dkt_auc:+.4f}  PR-AUC={v2_prauc - dkt_prauc:+.4f}  Acc={v2_acc - dkt_acc:+.4f}  Brier={v2_brier - dkt_brier:+.4f}")
+    if CAUSAL_PREDS.exists():
+        df_c = pd.read_csv(CAUSAL_PREDS)
+        p_c = df_c["y_prob_umikt_v2"].values
+        c_auc = roc_auc_score(y_true, p_c)
+        c_prauc = average_precision_score(y_true, p_c)
+        c_acc = accuracy_score(y_true, (p_c >= 0.5).astype(int))
+        c_rmse = np.sqrt(mean_squared_error(y_true, p_c))
+        c_brier = brier_score_loss(y_true, p_c)
+        print(f"  UMiKT-v2 (Causal):AUC={c_auc:.4f}  PR-AUC={c_prauc:.4f}  Acc={c_acc:.4f}  RMSE={c_rmse:.4f}  Brier={c_brier:.4f}")
+        print(f"  Causal vs DKT:    AUC={c_auc - dkt_auc:+.4f}  PR-AUC={c_prauc - dkt_prauc:+.4f}  Acc={c_acc - dkt_acc:+.4f}  Brier={c_brier - dkt_brier:+.4f}")
+    if SOTA_PREDS.exists():
+        df_sota = pd.read_csv(SOTA_PREDS)
+        p_sota = df_sota["y_prob_umikt_v2"].values
+        s_auc = roc_auc_score(y_true, p_sota)
+        s_prauc = average_precision_score(y_true, p_sota)
+        s_acc = accuracy_score(y_true, (p_sota >= 0.5).astype(int))
+        s_rmse = np.sqrt(mean_squared_error(y_true, p_sota))
+        s_brier = brier_score_loss(y_true, p_sota)
+        print(f"  UMiKT-SOTA Hybrid:AUC={s_auc:.4f}  PR-AUC={s_prauc:.4f}  Acc={s_acc:.4f}  RMSE={s_rmse:.4f}  Brier={s_brier:.4f}")
+        print(f"  SOTA vs DKT:      AUC={s_auc - dkt_auc:+.4f}  PR-AUC={s_prauc - dkt_prauc:+.4f}  Acc={s_acc - dkt_acc:+.4f}  Brier={s_brier - dkt_brier:+.4f}")
+        print(f"  SOTA vs Leaked v2:AUC={s_auc - v2_auc:+.4f}  PR-AUC={s_prauc - v2_prauc:+.4f}  Acc={s_acc - v2_acc:+.4f}  Brier={s_brier - v2_brier:+.4f}")
 
     # 5. Statistical Bootstrapping: Interaction vs. Learner-Clustered
     print("\n[5] Statistical Bootstrapping (B=2,000 resamples)")

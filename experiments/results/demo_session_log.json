@@ -9,141 +9,141 @@
       "correctness": 0.9,
       "misconception_label": "none",
       "misconception_severity": 0.0,
-      "mastery_after": 0.05631653219461441,
-      "uncertainty_after": 0.0022446285584010184,
+      "mastery_after": 0.07762885838747025,
+      "uncertainty_after": 0.005580811994150281,
       "action": "diagnose_prerequisite",
-      "explanation": "Conditions shows low mastery (M=0.06) and weak prerequisites (candidate gaps in: Variables). Diagnosing prerequisite knowledge before attempting Conditions content.",
-      "next_concept": "Functions",
+      "explanation": "Conditions shows low mastery (M=0.08) and weak prerequisites (candidate gaps in: Variables). Diagnosing prerequisite knowledge before attempting Conditions content.",
+      "next_concept": "Algorithms",
       "next_action": "diagnose_prerequisite"
     },
     {
       "step": 2,
-      "concept_id": 3,
-      "concept_name": "Functions",
-      "student_answer": "it returns 0",
+      "concept_id": 6,
+      "concept_name": "Algorithms",
+      "student_answer": "O(1) because it checks one element",
       "correctness": 0.1,
       "misconception_label": "none",
       "misconception_severity": 0.0,
-      "mastery_after": 0.05179869383573532,
-      "uncertainty_after": 0.007498139748349786,
+      "mastery_after": 0.04493376612663269,
+      "uncertainty_after": 0.003464562469162047,
       "action": "diagnose_prerequisite",
-      "explanation": "Functions shows low mastery (M=0.05) and weak prerequisites (candidate gaps in: Loops). Diagnosing prerequisite knowledge before attempting Functions content.",
-      "next_concept": "Conditions",
+      "explanation": "Algorithms shows low mastery (M=0.04) and weak prerequisites (candidate gaps in: Data Structures). Diagnosing prerequisite knowledge before attempting Algorithms content.",
+      "next_concept": "Data Structures",
       "next_action": "diagnose_prerequisite"
     },
     {
       "step": 3,
-      "concept_id": 1,
-      "concept_name": "Conditions",
-      "student_answer": "the code is correct",
+      "concept_id": 5,
+      "concept_name": "Data Structures",
+      "student_answer": "[1,2,3] because b is a copy",
       "correctness": 0.1,
       "misconception_label": "none",
       "misconception_severity": 0.0,
-      "mastery_after": 0.05345054715871811,
-      "uncertainty_after": 0.00310999050270766,
+      "mastery_after": 0.0566340796649456,
+      "uncertainty_after": 0.007612858316861093,
       "action": "diagnose_prerequisite",
-      "explanation": "Conditions shows low mastery (M=0.05) and weak prerequisites (candidate gaps in: Variables). Diagnosing prerequisite knowledge before attempting Conditions content.",
-      "next_concept": "Recursion",
+      "explanation": "Data Structures shows low mastery (M=0.06) and weak prerequisites (candidate gaps in: Functions, Loops). Diagnosing prerequisite knowledge before attempting Data Structures content.",
+      "next_concept": "Functions",
       "next_action": "diagnose_prerequisite"
     }
   ],
   "final_state": {
     "Variables": {
-      "M": 0.056,
+      "M": 0.05,
       "MC_sev": 0.0,
       "MC_class": 0,
-      "U": 0.004,
+      "U": 0.005,
       "R": 0.8,
       "F": 0.2
     },
     "Conditions": {
-      "M": 0.053,
+      "M": 0.06,
       "MC_sev": 0.0,
       "MC_class": 0,
-      "U": 0.003,
+      "U": 0.009,
       "R": 0.8,
       "F": 0.2
     },
     "Loops": {
-      "M": 0.061,
+      "M": 0.063,
       "MC_sev": 0.0,
       "MC_class": 0,
-      "U": 0.008,
+      "U": 0.017,
       "R": 0.8,
       "F": 0.2
     },
     "Functions": {
-      "M": 0.046,
-      "MC_sev": 0.0,
-      "MC_class": 0,
-      "U": 0.003,
-      "R": 0.8,
-      "F": 0.2
-    },
-    "Recursion": {
       "M": 0.039,
-      "MC_sev": 0.0,
-      "MC_class": 0,
-      "U": 0.003,
-      "R": 0.8,
-      "F": 0.2
-    },
-    "Data Structures": {
-      "M": 0.047,
       "MC_sev": 0.0,
       "MC_class": 0,
       "U": 0.001,
       "R": 0.8,
       "F": 0.2
     },
-    "Algorithms": {
-      "M": 0.047,
+    "Recursion": {
+      "M": 0.046,
       "MC_sev": 0.0,
       "MC_class": 0,
-      "U": 0.005,
+      "U": 0.004,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Data Structures": {
+      "M": 0.057,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.008,
+      "R": 0.8,
+      "F": 0.2
+    },
+    "Algorithms": {
+      "M": 0.051,
+      "MC_sev": 0.0,
+      "MC_class": 0,
+      "U": 0.006,
       "R": 0.8,
       "F": 0.2
     }
   },
   "system_cost": {
-    "session_total_latency_sec": 3.593,
+    "session_total_latency_sec": 2.397,
     "n_interactions": 3,
     "agents": [
       {
         "agent": "DiagnosisAgent",
         "call_count": 1,
-        "total_latency_sec": 0.0,
-        "avg_latency_sec": 0.0
+        "total_latency_sec": 0.0001,
+        "avg_latency_sec": 0.0001
       },
       {
         "agent": "AssessmentAgent",
         "call_count": 3,
-        "total_latency_sec": 0.0001,
-        "avg_latency_sec": 0.0
+        "total_latency_sec": 0.0003,
+        "avg_latency_sec": 0.0001
       },
       {
         "agent": "EvaluationAgent",
         "call_count": 3,
-        "total_latency_sec": 0.0017,
-        "avg_latency_sec": 0.0006
+        "total_latency_sec": 0.0186,
+        "avg_latency_sec": 0.0062
       },
       {
         "agent": "LearnerModelingAgent",
         "call_count": 3,
-        "total_latency_sec": 3.5909,
-        "avg_latency_sec": 1.197
+        "total_latency_sec": 2.3721,
+        "avg_latency_sec": 0.7907
       },
       {
         "agent": "CurriculumPlanningAgent",
         "call_count": 6,
-        "total_latency_sec": 0.0001,
-        "avg_latency_sec": 0.0
+        "total_latency_sec": 0.0008,
+        "avg_latency_sec": 0.0001
       },
       {
         "agent": "CurriculumAdaptationAgent",
         "call_count": 9,
-        "total_latency_sec": 0.0001,
-        "avg_latency_sec": 0.0
+        "total_latency_sec": 0.0011,
+        "avg_latency_sec": 0.0001
       }
     ],
     "llm_calls": 3,

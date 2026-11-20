@@ -239,10 +239,32 @@ class LearnerModelingAgent(BaseAgent):
         fv = build_feature_vector(rec)
         x_t = torch.tensor(fv, dtype=torch.float32, device=self.device)
 
-        # Build sequence tensor (single interaction for now)
+        # Build sequence tensor from cumulative interaction history (causal)
         from src.features.feature_builder import N_CONCEPTS, INPUT_DIM
-        x_seq = torch.zeros(N_CONCEPTS, 10, INPUT_DIM, device=self.device)
-        x_seq[concept_id, 0] = x_t
+        seq_len = 10
+        x_seq = torch.zeros(N_CONCEPTS, seq_len, INPUT_DIM, device=self.device)
+        by_concept: dict[int, list] = {}
+        for past_eval in self._history[learner_id]:
+            cid = past_eval.get("concept_id", 0) % N_CONCEPTS
+            by_concept.setdefault(cid, []).append(past_eval)
+
+        for cid, evals in by_concept.items():
+            for t_idx, past_eval in enumerate(evals[-seq_len:]):
+                p_rec = {
+                    "correctness": past_eval.get("correctness", 0.5),
+                    "difficulty": past_eval.get("difficulty", 0.5),
+                    "response_time_norm": 0.4,
+                    "attempts": 0.2,
+                    "temporal_gap_norm": 0.1,
+                    "evaluator_confidence": past_eval.get("misconception_confidence", 0.75),
+                    "question_type": "short_answer",
+                    "concept_id": cid,
+                    "misconception_severity": past_eval.get("misconception_severity", 0.0),
+                    "misconception_confidence": past_eval.get("misconception_confidence", 0.0),
+                    "reasoning_quality": past_eval.get("reasoning_quality", 0.5),
+                }
+                fv_t = build_feature_vector(p_rec)
+                x_seq[cid, t_idx] = torch.tensor(fv_t, dtype=torch.float32, device=self.device)
 
         ls_tensor = learner_state.to_tensor(self.device)
 

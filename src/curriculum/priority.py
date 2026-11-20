@@ -50,10 +50,16 @@ ACTIONS = [
     "misconception_targeted_content",
 ]
 
-# Concept names for explanations
+# Default concept names for explanations (programming domain)
 CONCEPT_NAMES = [
     "Variables", "Conditions", "Loops", "Functions",
     "Recursion", "Data Structures", "Algorithms"
+]
+
+# Math concept names for FoundationalASSIST domain
+MATH_CONCEPT_NAMES = [
+    "Arithmetic & Operations", "The Number System", "Ratios & Proportions",
+    "Expressions & Equations", "Functions", "Geometry", "Statistics & Probability"
 ]
 
 # Prerequisite map for dependency scoring (matches concept_graph.json)
@@ -68,6 +74,26 @@ PREREQUISITES = {
 }
 
 
+def load_concept_graph(graph_path: str) -> tuple[list[str], dict[int, list[int]]]:
+    """Load concept names and prerequisite adjacency from a concept graph JSON file."""
+    import json
+    from pathlib import Path
+    p = Path(graph_path)
+    if not p.exists():
+        return CONCEPT_NAMES, PREREQUISITES
+    with open(p) as f:
+        data = json.load(f)
+    nodes = sorted(data.get("nodes", []), key=lambda x: int(x.get("concept_id", 0)))
+    names = [n.get("name", f"Concept {n.get('concept_id')}") for n in nodes]
+    prereqs: dict[int, list[int]] = {i: [] for i in range(len(names))}
+    for e in data.get("edges", []):
+        src = int(e.get("source", e.get("from", 0)))
+        dst = int(e.get("target", e.get("to", 0)))
+        if dst in prereqs and src not in prereqs[dst]:
+            prereqs[dst].append(src)
+    return names or CONCEPT_NAMES, prereqs or PREREQUISITES
+
+
 class CurriculumPriority:
     """
     Computes per-concept priority scores for curriculum selection.
@@ -77,10 +103,12 @@ class CurriculumPriority:
 
     Args:
         weights: Dict of priority weights. Defaults to DEFAULT_PRIORITY_WEIGHTS.
+        prerequisites: Dict mapping concept_id to prerequisite IDs.
     """
 
-    def __init__(self, weights: dict | None = None):
+    def __init__(self, weights: dict | None = None, prerequisites: dict | None = None):
         self.weights = weights or DEFAULT_PRIORITY_WEIGHTS.copy()
+        self.prerequisites = prerequisites if prerequisites is not None else PREREQUISITES
 
     def compute_dependency_scores(
         self,
@@ -100,7 +128,7 @@ class CurriculumPriority:
         """
         dep_scores = []
         for c in range(N_CONCEPTS):
-            prereqs = PREREQUISITES.get(c, [])
+            prereqs = self.prerequisites.get(c, [])
             if not prereqs:
                 dep_scores.append(0.0)
             else:
@@ -187,6 +215,10 @@ class ActionPolicy:
     HIGH_FORGETTING = 0.40
     HIGH_PREREQUISITE_GAP = 0.50
 
+    def __init__(self, concept_names: list[str] | None = None, prerequisites: dict | None = None):
+        self.concept_names = concept_names if concept_names is not None else CONCEPT_NAMES
+        self.prerequisites = prerequisites if prerequisites is not None else PREREQUISITES
+
     def select_action(
         self,
         concept_id: int,
@@ -203,7 +235,7 @@ class ActionPolicy:
             Tuple of (action_label, explanation_string).
             The explanation string is human-readable for the learner/tutor.
         """
-        cname = CONCEPT_NAMES[concept_id] if concept_id < N_CONCEPTS else f"Concept {concept_id}"
+        cname = self.concept_names[concept_id] if concept_id < len(self.concept_names) else f"Concept {concept_id}"
 
         # ── Rule 1: High mastery + low uncertainty → Advance ─────────────────
         if (mastery >= self.HIGH_MASTERY
@@ -238,8 +270,8 @@ class ActionPolicy:
 
         # ── Rule 4: Low mastery + high prerequisite gap → Diagnose prereq ────
         if mastery < self.LOW_MASTERY and dep_score >= self.HIGH_PREREQUISITE_GAP:
-            prereqs = PREREQUISITES.get(concept_id, [])
-            prereq_names = [CONCEPT_NAMES[p] for p in prereqs if p < N_CONCEPTS]
+            prereqs = self.prerequisites.get(concept_id, [])
+            prereq_names = [self.concept_names[p] for p in prereqs if p < len(self.concept_names)]
             return (
                 "diagnose_prerequisite",
                 f"{cname} shows low mastery (M={mastery:.2f}) and weak prerequisites "

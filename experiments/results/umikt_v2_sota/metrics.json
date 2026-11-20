@@ -1,0 +1,14 @@
+{
+  "model_name": "UMiKT-GAT SOTA (Neural GAT + Causal Tree Hybrid)",
+  "zero_leakage": true,
+  "causal": true,
+  "n_targets": 11700,
+  "n_learners": 300,
+  "targets_per_learner": 39,
+  "ROC_AUC": 0.8160227675034597,
+  "PR_AUC": 0.8658805627822086,
+  "Accuracy": 0.7404273504273504,
+  "RMSE": 0.41382168751455484,
+  "Brier": 0.17124838905739387,
+  "ECE": 0.010273783028508099
+}
